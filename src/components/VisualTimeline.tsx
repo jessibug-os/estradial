@@ -208,7 +208,14 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     return (
       <div
         key={day}
-        onClick={() => addOrUpdateDose(day)}
+        onClick={() => {
+          addOrUpdateDose(day);
+          // Enter editing mode immediately after creating
+          setTimeout(() => {
+            setEditingDose(day);
+            setEditingValue('6');
+          }, 0);
+        }}
         style={{
           width: '100%',
           aspectRatio: '1',
