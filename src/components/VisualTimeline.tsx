@@ -6,6 +6,7 @@ import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
 import { getEsterColor } from '../constants/colors';
 import { useDebouncedInput } from '../hooks/useDebounce';
+import { parsePositiveInteger, parsePositiveFloat } from '../utils/validation';
 
 interface VisualTimelineProps {
   doses: Dose[];
@@ -36,8 +37,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [scheduleInputValue, setScheduleInputValue] = useDebouncedInput(
     viewDays.toString(),
     (value) => {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) && numValue >= 1 && numValue !== viewDays) {
+      const numValue = parsePositiveInteger(value, 1);
+      if (numValue !== null && numValue !== viewDays) {
         onViewDaysChange(numValue);
       }
     },
@@ -51,8 +52,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [maxInjectionsInput, setMaxInjectionsInput] = useDebouncedInput(
     '7',
     (value) => {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) && numValue >= 1 && numValue !== maxInjections) {
+      const numValue = parsePositiveInteger(value, 1);
+      if (numValue !== null && numValue !== maxInjections) {
         setMaxInjections(numValue);
       }
     },
@@ -172,16 +173,16 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
               e.target.select();
             }}
             onBlur={() => {
-              const newDose = parseFloat(editingValue);
-              if (!isNaN(newDose) && newDose > 0) {
+              const newDose = parsePositiveFloat(editingValue, 0);
+              if (newDose !== null) {
                 updateDoseAmount(day, newDose);
               }
               setEditingDose(null);
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                const newDose = parseFloat(editingValue);
-                if (!isNaN(newDose) && newDose > 0) {
+                const newDose = parsePositiveFloat(editingValue, 0);
+                if (newDose !== null) {
                   updateDoseAmount(day, newDose);
                 }
                 setEditingDose(null);
@@ -591,7 +592,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                       onChange={(e) => setMaxInjectionsInput(e.target.value)}
                       onBlur={(e) => {
                         const val = e.target.value;
-                        if (val === '' || parseInt(val) < 1 || isNaN(parseInt(val))) {
+                        const parsed = parsePositiveInteger(val, 1);
+                        if (parsed === null) {
                           setMaxInjectionsInput('1');
                           setMaxInjections(1);
                         }
@@ -814,7 +816,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                 }}
                 onBlur={(e) => {
                   const val = e.target.value;
-                  if (val === '' || parseInt(val) < 1 || isNaN(parseInt(val))) {
+                  const parsed = parsePositiveInteger(val, 1);
+                  if (parsed === null) {
                     setScheduleInputValue('1');
                     onViewDaysChange(1);
                   }
