@@ -21,3 +21,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Refactoring documentation (local only)
+CODE_REVIEW.md
+QUICK_WINS.md
+REFACTORING_CHECKLIST.md
+REFACTORING_EXAMPLE.md

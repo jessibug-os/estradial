@@ -3,6 +3,7 @@ import { Dose, ESTRADIOL_ESTERS, EstradiolEster } from '../data/estradiolEsters'
 import { PRESETS } from '../data/presets';
 import { optimizeSchedule } from '../utils/scheduleOptimizer';
 import { ReferenceCycleType } from '../data/referenceData';
+import { formatNumber } from '../utils/formatters';
 
 interface VisualTimelineProps {
   doses: Dose[];
@@ -29,11 +30,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   referenceCycleType,
   maxDays = 120
 }) => {
-  // Helper to format numbers without trailing zeros
-  const formatNumber = (num: number): string => {
-    return parseFloat(num.toFixed(2)).toString();
-  };
-
   const [selectedDose, setSelectedDose] = useState<number | null>(null);
   const [scheduleInputValue, setScheduleInputValue] = useState(viewDays.toString());
   const [showResetModal, setShowResetModal] = useState(false);

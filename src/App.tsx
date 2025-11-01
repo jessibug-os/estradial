@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { DEFAULT_DOSES, Dose } from './data/estradiolEsters';
+import { Dose } from './data/estradiolEsters';
 import {
   calculateTotalConcentration,
   generateTimePoints,
@@ -38,7 +38,7 @@ function App() {
     }
 
     return {
-      doses: DEFAULT_DOSES,
+      doses: [],
       scheduleLength: 29,
       graphDays: 90,
       repeat: true,
