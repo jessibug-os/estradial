@@ -187,10 +187,10 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
             labelFormatter={(value) => `Day ${value}`}
           />
           <Legend />
-          <Line 
-            type="monotone" 
-            dataKey="concentration" 
-            stroke="#8884d8" 
+          <Line
+            type="monotone"
+            dataKey="concentration"
+            stroke="#b794f6"
             strokeWidth={2}
             dot={false}
             name="Estradiol Ester"
