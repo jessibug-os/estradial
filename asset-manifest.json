@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/estradial/static/css/main.f855e6bc.css",
-    "main.js": "/estradial/static/js/main.26386f70.js",
+    "main.css": "/estradial/static/css/main.dba54d4b.css",
+    "main.js": "/estradial/static/js/main.bcc3532b.js",
     "static/js/453.33e726a8.chunk.js": "/estradial/static/js/453.33e726a8.chunk.js",
     "index.html": "/estradial/index.html",
-    "main.f855e6bc.css.map": "/estradial/static/css/main.f855e6bc.css.map",
-    "main.26386f70.js.map": "/estradial/static/js/main.26386f70.js.map",
+    "main.dba54d4b.css.map": "/estradial/static/css/main.dba54d4b.css.map",
+    "main.bcc3532b.js.map": "/estradial/static/js/main.bcc3532b.js.map",
     "453.33e726a8.chunk.js.map": "/estradial/static/js/453.33e726a8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f855e6bc.css",
-    "static/js/main.26386f70.js"
+    "static/css/main.dba54d4b.css",
+    "static/js/main.bcc3532b.js"
   ]
 }
