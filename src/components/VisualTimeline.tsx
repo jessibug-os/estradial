@@ -156,7 +156,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
           title={`Day ${day}: ${dose}mg (${doseData.ester.name})`}
         >
           <input
-            ref={(el) => (inputRefs.current[day] = el)}
+            ref={(el) => { inputRefs.current[day] = el; }}
             type="text"
             value={isEditing ? editingValue : dose}
             onChange={(e) => {
@@ -189,9 +189,9 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             }}
             readOnly={!isEditing}
             style={{
-              width: '3ch',
-              minWidth: '3ch',
-              maxWidth: '3ch',
+              width: '4ch',
+              minWidth: '4ch',
+              maxWidth: '4ch',
               border: 'none',
               background: 'transparent',
               textAlign: 'center',
@@ -212,7 +212,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
         key={day}
         onClick={() => {
           addOrUpdateDose(day);
-          // Enter editing mode immediately after creating
+          // Select this dose for the side panel and enter editing mode
+          setSelectedDose(day);
           setEditingDose(day);
           setEditingValue('6');
           setTimeout(() => {
@@ -458,13 +459,15 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             </div>
           </div>
         </div>
-        <div style={{
+        <div className="hide-scrollbar" style={{
           border: '2px solid #dee2e6',
           borderRadius: '4px',
           backgroundColor: '#ffffff',
           height: '400px',
           overflowY: 'auto',
-          padding: '12px'
+          padding: '12px',
+          scrollbarWidth: 'none', // Firefox
+          msOverflowStyle: 'none' // IE/Edge
         }}>
           {renderWeeks()}
         </div>
