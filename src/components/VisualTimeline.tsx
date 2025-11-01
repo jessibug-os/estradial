@@ -165,11 +165,12 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
           onClick={() => {
             setSelectedDose(isSelected ? null : day);
           }}
+          className="testcell"
           style={{
             width: '100%',
             aspectRatio: '1',
             backgroundColor,
-            border: isSelected ? '2px solid #ffc107' : '1px solid #dee2e6',
+            border: isSelected ? '2px solid #7952b3' : '1px solid #dee2e6',
             borderRadius: '4px',
             cursor: 'pointer',
             display: 'flex',
