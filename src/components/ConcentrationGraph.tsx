@@ -81,6 +81,25 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
     };
   });
 
+  // Generate sensible X-axis tick intervals
+  const generateXTicks = (maxDays: number) => {
+    let interval: number;
+    if (maxDays <= 30) interval = 5;
+    else if (maxDays <= 150) interval = 10;
+    else if (maxDays <= 300) interval = 20;
+    else interval = 30;
+
+    const ticks = [];
+    for (let i = 0; i <= maxDays; i += interval) {
+      ticks.push(i);
+    }
+    // Always include the last day if it's not already there
+    if (ticks[ticks.length - 1] !== maxDays) {
+      ticks.push(maxDays);
+    }
+    return ticks;
+  };
+
   return (
     <div style={{ marginTop: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -130,8 +149,8 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
           <XAxis
             dataKey="time"
             label={{ value: 'Time (days)', position: 'insideBottom', offset: -10 }}
-            tickFormatter={(value) => Math.round(value).toString()}
-            allowDecimals={false}
+            ticks={generateXTicks(viewDays)}
+            domain={[0, viewDays]}
           />
           <YAxis
             tickFormatter={formatYAxisTick}
