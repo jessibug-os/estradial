@@ -100,6 +100,30 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
     return ticks;
   };
 
+  // Generate Y-axis ticks based on max value in data
+  const generateYTicks = () => {
+    const maxConcentration = Math.max(
+      ...filteredData.map(d => d.concentration),
+      ...combinedData.map(d => d.reference || 0)
+    );
+
+    // Round up to nearest 50
+    const maxY = Math.ceil(maxConcentration / 50) * 50;
+
+    // Generate ticks every 50 up to maxY
+    const ticks = [];
+    for (let i = 0; i <= maxY; i += 50) {
+      ticks.push(i);
+    }
+
+    // Ensure we have at least a few ticks
+    if (ticks.length < 3) {
+      return [0, 50, 100, 150, 200, 250, 300];
+    }
+
+    return ticks;
+  };
+
   return (
     <div style={{ marginTop: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -156,7 +180,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
             tickFormatter={formatYAxisTick}
             label={{ value: 'Concentration (pg/mL)', angle: -90, position: 'insideLeft' }}
             domain={[0, 'auto']}
-            ticks={[0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]}
+            ticks={generateYTicks()}
           />
           <Tooltip 
             formatter={formatTooltip}
