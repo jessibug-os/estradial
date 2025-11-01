@@ -22,7 +22,7 @@ export const parsePositiveFloat: (value: string, min?: number, max?: number) => 
   max
 ) => {
   const num = parseFloat(value);
-  if (isNaN(num) || num <= min || (max !== undefined && num > max)) {
+  if (isNaN(num) || num < min || (max !== undefined && num > max)) {
     return null;
   }
   return num;

@@ -24,5 +24,6 @@ export const DEFAULTS = {
   DEFAULT_GRAPH_DAYS: 90,
   DEFAULT_REPEAT: true,
   DEFAULT_CYCLE_TYPE: 'typical' as const,
+  DEFAULT_CONCENTRATION_MG_PER_ML: 40, // Common concentration for injectable estradiol
 } as const;
 

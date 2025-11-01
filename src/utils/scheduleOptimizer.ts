@@ -8,10 +8,11 @@ export interface OptimizationParams {
   scheduleLength: number;
   referenceCycleType: ReferenceCycleType;
   steadyState?: boolean;
-  granularity?: number;
-  maxDosePerInjection?: number;
-  minDosePerInjection?: number;
+  granularity?: number; // In mL
+  maxDosePerInjection?: number; // In mg
+  minDosePerInjection?: number; // In mg
   maxInjectionsPerCycle?: number;
+  esterConcentrations: Record<string, number>; // mg/mL for each ester
 }
 
 export interface OptimizationResult {
@@ -99,10 +100,11 @@ export async function optimizeSchedule(
     scheduleLength,
     referenceCycleType,
     steadyState = false,
-    granularity = 0.1,
+    granularity = 0.05, // mL
     maxDosePerInjection = 10,
     minDosePerInjection = 0.1,
-    maxInjectionsPerCycle = 10
+    maxInjectionsPerCycle = 10,
+    esterConcentrations
   } = params;
 
   if (availableEsters.length === 0) {
@@ -117,9 +119,11 @@ export async function optimizeSchedule(
   const primaryEster = availableEsters[0]; // Start with first available ester
 
   // Initialize with evenly distributed doses
-  // Round starting dose to granularity
-  const roundingFactor = 1 / granularity;
-  const startingDose = Math.round(2 * roundingFactor) / roundingFactor;
+  // Start with 0.15 mL as a reasonable starting volume
+  const startingVolumeMl = 0.15;
+  const primaryConcentration = esterConcentrations[primaryEster.name] || 40;
+  const startingDose = startingVolumeMl * primaryConcentration;
+
   let currentDoses: Dose[] = candidateDays.map(day => ({
     day,
     dose: startingDose,
@@ -177,17 +181,24 @@ export async function optimizeSchedule(
       }
     }
 
-    // Try adjusting each dose
+    // Try adjusting each dose (in mL increments)
     for (let i = 0; i < currentDoses.length; i++) {
       const originalDose = currentDoses[i].dose;
+      const ester = currentDoses[i].ester;
+      const concentration = esterConcentrations[ester.name] || 40;
+
+      // Convert to mL for adjustment
+      const originalVolumeMl = originalDose / concentration;
+
       let bestDose = originalDose;
       let bestScore = currentScore; // This is the score with originalDose
 
-      // Try increasing dose by granularity increments - test all possibilities
+      // Try increasing volume by mL granularity increments
       for (let numSteps = 1; numSteps <= 10; numSteps++) {
-        const testDose = Math.min(maxDosePerInjection, originalDose + (granularity * numSteps));
+        const testVolumeMl = originalVolumeMl + (granularity * numSteps);
+        const testDose = testVolumeMl * concentration;
 
-        if (testDose === originalDose) break; // Hit max dose
+        if (testDose > maxDosePerInjection) break; // Hit max dose
 
         currentDoses[i].dose = testDose;
         const newScore = calculateMSE(currentDoses, referenceData, scheduleLength, steadyState);
@@ -196,18 +207,19 @@ export async function optimizeSchedule(
           bestScore = newScore;
           bestDose = testDose;
           improved = true;
-          console.log(`  Dose ${i}: found better by increasing to ${testDose.toFixed(2)}mg, score ${newScore.toFixed(2)}`);
+          console.log(`  Dose ${i}: found better by increasing to ${testVolumeMl.toFixed(3)}mL (${testDose.toFixed(2)}mg), score ${newScore.toFixed(2)}`);
         }
       }
 
       // Reset to original before testing decreases
       currentDoses[i].dose = originalDose;
 
-      // Try decreasing dose by granularity increments - test all possibilities
+      // Try decreasing volume by mL granularity increments
       for (let numSteps = 1; numSteps <= 10; numSteps++) {
-        const testDose = Math.max(minDosePerInjection, originalDose - (granularity * numSteps));
+        const testVolumeMl = Math.max(0.01, originalVolumeMl - (granularity * numSteps));
+        const testDose = testVolumeMl * concentration;
 
-        if (testDose === originalDose) break; // Hit min dose
+        if (testDose < minDosePerInjection) break; // Hit min dose
 
         currentDoses[i].dose = testDose;
         const newScore = calculateMSE(currentDoses, referenceData, scheduleLength, steadyState);
@@ -216,7 +228,7 @@ export async function optimizeSchedule(
           bestScore = newScore;
           bestDose = testDose;
           improved = true;
-          console.log(`  Dose ${i}: found better by decreasing to ${testDose.toFixed(2)}mg, score ${newScore.toFixed(2)}`);
+          console.log(`  Dose ${i}: found better by decreasing to ${testVolumeMl.toFixed(3)}mL (${testDose.toFixed(2)}mg), score ${newScore.toFixed(2)}`);
         }
       }
 

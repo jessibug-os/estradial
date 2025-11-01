@@ -18,6 +18,8 @@ interface VisualTimelineProps {
   steadyState: boolean;
   onSteadyStateChange: (steadyState: boolean) => void;
   referenceCycleType: ReferenceCycleType;
+  esterConcentrations: Record<string, number>;
+  onEsterConcentrationsChange: (concentrations: Record<string, number>) => void;
   maxDays?: number;
 }
 
@@ -31,6 +33,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   steadyState,
   onSteadyStateChange,
   referenceCycleType,
+  esterConcentrations,
+  onEsterConcentrationsChange,
   maxDays = 120
 }) => {
   const [selectedDose, setSelectedDose] = useState<number | null>(null);
@@ -59,7 +63,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     },
     500
   );
-  const [granularity, setGranularity] = useState<number>(0.1);
+  const [granularity, setGranularity] = useState<number>(0.05); // mL
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationProgress, setOptimizationProgress] = useState(0);
   const [optimizationScore, setOptimizationScore] = useState(0);
@@ -132,6 +136,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
     if (hasInjection && doseData) {
       const backgroundColor = getEsterColor(doseData.ester.name);
+      const concentration = esterConcentrations[doseData.ester.name] || 40;
+      const volumeMl = dose / concentration;
 
       return (
         <div
@@ -158,7 +164,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             boxShadow: `0 1px 2px ${backgroundColor}66`,
             overflow: 'hidden'
           }}
-          title={`Day ${day}: ${formatNumber(dose)}mg (${doseData.ester.name})`}
+          title={`Day ${day}: ${formatNumber(dose)}mg = ${formatNumber(volumeMl, 3)}mL (${doseData.ester.name})`}
         >
           <input
             ref={(el) => { inputRefs.current[day] = el; }}
@@ -208,6 +214,21 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
               cursor: 'pointer'
             }}
           />
+          {/* Volume display in corner */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '2px',
+              right: '3px',
+              fontSize: '9px',
+              fontWeight: '500',
+              color: 'rgba(255, 255, 255, 0.85)',
+              pointerEvents: 'none',
+              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+            }}
+          >
+            {formatNumber(volumeMl, 3)}mL
+          </div>
         </div>
       );
     }
@@ -660,25 +681,25 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ fontSize: '14px', fontWeight: '600', display: 'block', marginBottom: '10px' }}>
-                    Dose Granularity (minimum dose increment):
+                    Volume Granularity (minimum volume increment):
                   </label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <input
                       type="range"
-                      min="0.05"
-                      max="0.5"
-                      step="0.05"
+                      min="0.01"
+                      max="0.1"
+                      step="0.01"
                       value={granularity}
                       onChange={(e) => setGranularity(Math.round(parseFloat(e.target.value) * 100) / 100)}
                       style={{ flex: 1 }}
                     />
                     <input
                       type="number"
-                      min="0.05"
-                      max="0.5"
-                      step="0.05"
-                      value={formatNumber(granularity)}
-                      onChange={(e) => setGranularity(Math.round(parseFloat(e.target.value) * 100) / 100 || 0.1)}
+                      min="0.01"
+                      max="0.1"
+                      step="0.01"
+                      value={formatNumber(granularity, 3)}
+                      onChange={(e) => setGranularity(Math.round(parseFloat(e.target.value) * 100) / 100 || 0.05)}
                       style={{
                         width: '70px',
                         padding: '6px 8px',
@@ -687,11 +708,11 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                         fontSize: '13px'
                       }}
                     />
-                    <span style={{ fontSize: '13px', color: '#6c757d', minWidth: '30px' }}>mg</span>
+                    <span style={{ fontSize: '13px', color: '#6c757d', minWidth: '30px' }}>mL</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '6px' }}>
-                    {granularity <= 0.1 ? 'Fine adjustments (slower)' :
-                     granularity <= 0.25 ? 'Balanced adjustments' :
+                    {granularity <= 0.025 ? 'Very fine adjustments (slower, for precision)' :
+                     granularity <= 0.05 ? 'Fine adjustments (balanced)' :
                      'Coarse adjustments (faster)'}
                   </div>
                 </div>
@@ -761,7 +782,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                             granularity,
                             maxDosePerInjection: 10,
                             minDosePerInjection: 0.1,
-                            maxInjectionsPerCycle: maxInjections
+                            maxInjectionsPerCycle: maxInjections,
+                            esterConcentrations
                           },
                           (progress, score, iteration) => {
                             setOptimizationProgress(Math.round(progress));

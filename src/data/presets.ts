@@ -95,7 +95,7 @@ export const PRESETS: Preset[] = [
   {
     id: 'cycle-mimic',
     name: 'Cycle Mimicking',
-    description: 'Variable doses to mimic natural cycle',
+    description: 'Variable doses to mimic natural cycle (with less severe lows)',
     doses: [
       { day: 1, dose: 0.75, ester: EV },
       { day: 3, dose: 0.75, ester: EV },
