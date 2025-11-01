@@ -127,13 +127,17 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="time" 
+          <XAxis
+            dataKey="time"
             label={{ value: 'Time (days)', position: 'insideBottom', offset: -10 }}
+            tickFormatter={(value) => Math.round(value).toString()}
+            allowDecimals={false}
           />
-          <YAxis 
+          <YAxis
             tickFormatter={formatYAxisTick}
             label={{ value: 'Concentration (pg/mL)', angle: -90, position: 'insideLeft' }}
+            domain={[0, 'auto']}
+            ticks={[0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]}
           />
           <Tooltip 
             formatter={formatTooltip}
