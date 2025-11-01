@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import { DEFAULT_DOSES, Dose } from './data/estradiolEsters';
+import { DEFAULT_DOSES, Dose, ESTRADIOL_ESTERS } from './data/estradiolEsters';
 import {
   calculateTotalConcentration,
   generateTimePoints,
@@ -10,11 +10,62 @@ import VisualTimeline from './components/VisualTimeline';
 import ConcentrationGraph from './components/ConcentrationGraph';
 
 function App() {
-  const [doses, setDoses] = useState<Dose[]>(DEFAULT_DOSES);
+  // Load from URL or use defaults
+  const loadFromURL = (): { doses: Dose[], scheduleLength: number, graphDays: number, repeat: boolean } => {
+    const params = new URLSearchParams(window.location.search);
+    const scheduleData = params.get('schedule');
+
+    if (scheduleData) {
+      try {
+        const decoded = JSON.parse(atob(scheduleData));
+        const doses = decoded.doses.map((d: any) => ({
+          day: d.d,
+          dose: d.m,
+          ester: ESTRADIOL_ESTERS.find(e => e.name === d.e) || ESTRADIOL_ESTERS[1]
+        }));
+        return {
+          doses,
+          scheduleLength: decoded.sl || 90,
+          graphDays: decoded.gd || 100,
+          repeat: decoded.r || false
+        };
+      } catch (e) {
+        console.error('Failed to parse URL schedule', e);
+      }
+    }
+
+    return {
+      doses: DEFAULT_DOSES,
+      scheduleLength: 90,
+      graphDays: 100,
+      repeat: false
+    };
+  };
+
+  const initial = loadFromURL();
+  const [doses, setDoses] = useState<Dose[]>(initial.doses);
   const [concentrationData, setConcentrationData] = useState<ConcentrationPoint[]>([]);
-  const [scheduleLength, setScheduleLength] = useState(90);
-  const [graphDisplayDays, setGraphDisplayDays] = useState(100);
-  const [repeatSchedule, setRepeatSchedule] = useState(false);
+  const [scheduleLength, setScheduleLength] = useState(initial.scheduleLength);
+  const [graphDisplayDays, setGraphDisplayDays] = useState(initial.graphDays);
+  const [repeatSchedule, setRepeatSchedule] = useState(initial.repeat);
+
+  // Update URL when schedule changes
+  useEffect(() => {
+    const scheduleData = {
+      doses: doses.map(d => ({
+        d: d.day,
+        m: d.dose,
+        e: d.ester.name
+      })),
+      sl: scheduleLength,
+      gd: graphDisplayDays,
+      r: repeatSchedule
+    };
+
+    const encoded = btoa(JSON.stringify(scheduleData));
+    const newURL = `${window.location.pathname}?schedule=${encoded}`;
+    window.history.replaceState({}, '', newURL);
+  }, [doses, scheduleLength, graphDisplayDays, repeatSchedule]);
 
   useEffect(() => {
     // Create the dose array for calculation, repeating if needed
