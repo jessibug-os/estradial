@@ -1,6 +1,7 @@
 import { Dose, EstradiolEster } from '../data/estradiolEsters';
 import { calculateTotalConcentration, generateTimePoints } from './pharmacokinetics';
 import { generateReferenceCycle, ReferenceCycleType } from '../data/referenceData';
+import { PHARMACOKINETICS } from '../constants/pharmacokinetics';
 
 export interface OptimizationParams {
   availableEsters: EstradiolEster[];
@@ -30,11 +31,11 @@ function calculateMSE(
   scheduleLength: number,
   steadyState: boolean = false
 ): number {
-  // If steady state, prepend 3 cycles before day 0
+  // If steady state, prepend cycles before day 0
   let dosesForCalc = doses;
   if (steadyState) {
     const preCycles: Dose[] = [];
-    for (let cycle = -3; cycle < 0; cycle++) {
+    for (let cycle = PHARMACOKINETICS.STEADY_STATE_START_CYCLE; cycle < 0; cycle++) {
       doses.forEach(dose => {
         preCycles.push({
           ...dose,
@@ -45,7 +46,7 @@ function calculateMSE(
     dosesForCalc = [...preCycles, ...doses];
   }
 
-  const timePoints = generateTimePoints(scheduleLength, 0.5);
+  const timePoints = generateTimePoints(scheduleLength, PHARMACOKINETICS.TIME_POINT_STEP);
   const generated = calculateTotalConcentration(dosesForCalc, timePoints).filter(p => p.time >= 0);
 
   let sumSquaredError = 0;

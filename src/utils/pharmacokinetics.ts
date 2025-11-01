@@ -1,4 +1,5 @@
 import { EstradiolEster, Dose } from '../data/estradiolEsters';
+import { PHARMACOKINETICS } from '../constants/pharmacokinetics';
 
 export interface ConcentrationPoint {
   time: number;
@@ -11,7 +12,7 @@ export function calculateConcentration(
   dose: number,
   ester: EstradiolEster
 ): number {
-  if (t < day || t > day + 100) {
+  if (t < day || t > day + PHARMACOKINETICS.ESTER_EFFECT_DURATION_DAYS) {
     return 0;
   }
 
@@ -44,7 +45,7 @@ export function calculateTotalConcentration(
   });
 }
 
-export function generateTimePoints(maxDays: number, step: number = 0.1): number[] {
+export function generateTimePoints(maxDays: number, step: number = PHARMACOKINETICS.TIME_POINT_STEP): number[] {
   const points: number[] = [];
   for (let t = 0; t <= maxDays; t += step) {
     points.push(t);
