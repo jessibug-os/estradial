@@ -8,6 +8,7 @@ import {
 } from './utils/pharmacokinetics';
 import { ReferenceCycleType } from './data/referenceData';
 import { encodeSchedule, decodeSchedule, decodeLegacySchedule } from './utils/urlEncoding';
+import { PHARMACOKINETICS, DEFAULTS } from './constants/pharmacokinetics';
 import VisualTimeline from './components/VisualTimeline';
 import ConcentrationGraph from './components/ConcentrationGraph';
 
@@ -39,10 +40,10 @@ function App() {
 
     return {
       doses: [],
-      scheduleLength: 29,
-      graphDays: 90,
-      repeat: true,
-      cycleType: 'typical'
+      scheduleLength: DEFAULTS.DEFAULT_SCHEDULE_LENGTH,
+      graphDays: DEFAULTS.DEFAULT_GRAPH_DAYS,
+      repeat: DEFAULTS.DEFAULT_REPEAT,
+      cycleType: DEFAULTS.DEFAULT_CYCLE_TYPE
     };
   };
 
@@ -78,8 +79,8 @@ function App() {
       const cycleLength = scheduleLength;
 
       // If steady state, add cycles BEFORE day 0 to build up residual levels
-      const startCycle = steadyState ? -3 : 0; // 3 cycles before to reach steady state
-      const numCycles = Math.ceil(graphDisplayDays / cycleLength) + (steadyState ? 3 : 0);
+      const startCycle = steadyState ? PHARMACOKINETICS.STEADY_STATE_START_CYCLE : 0;
+      const numCycles = Math.ceil(graphDisplayDays / cycleLength) + (steadyState ? PHARMACOKINETICS.STEADY_STATE_CYCLES : 0);
 
       for (let cycle = startCycle; cycle < numCycles; cycle++) {
         doses.forEach(dose => {
@@ -93,7 +94,10 @@ function App() {
       dosesForCalculation = repeatedDoses.filter(d => d.day <= graphDisplayDays);
     }
 
-    const timePoints = generateTimePoints(graphDisplayDays + 100, 0.5);
+    const timePoints = generateTimePoints(
+      graphDisplayDays + PHARMACOKINETICS.ESTER_EFFECT_DURATION_DAYS,
+      PHARMACOKINETICS.TIME_POINT_STEP
+    );
     const data = calculateTotalConcentration(dosesForCalculation, timePoints);
 
     // Filter to only show data from day 0 onwards
@@ -133,7 +137,7 @@ function App() {
       <footer style={{ marginTop: '40px', textAlign: 'center', color: '#666', fontSize: '14px' }}>
         <p>
           This calculator implements the pharmacokinetic model: 
-          c(t) = (dose × D / 5) × k1 × k2 × [exponential terms] for day &lt; t &lt; day + 100
+          c(t) = (dose × D / 5) × k1 × k2 × [exponential terms] for day &lt; t &lt; day + {PHARMACOKINETICS.ESTER_EFFECT_DURATION_DAYS}
         </p>
         <p>
           Results are for educational purposes only and should not be used for medical decisions. This is a model. Get bloodwork for real levels. Consult your healthcare provider.
