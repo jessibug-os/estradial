@@ -4,6 +4,7 @@ import { PRESETS } from '../data/presets';
 import { optimizeSchedule } from '../utils/scheduleOptimizer';
 import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
+import { getEsterColor } from '../constants/colors';
 
 interface VisualTimelineProps {
   doses: Dose[];
@@ -93,20 +94,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
   // Default to Estradiol valerate for new injections
   const DEFAULT_ESTER = ESTRADIOL_ESTERS[1];
-
-  // Color mapping for different esters - all lavender/purple shades
-  const getEsterColor = (esterName: string): string => {
-    const colors: { [key: string]: string } = {
-      'Estradiol benzoate': '#e6d5f5',          // Light lavender
-      'Estradiol valerate': '#b794f6',          // Medium lavender
-      'Estradiol cypionate': '#9b72cf',         // Purple lavender
-      'Estradiol cypionate suspension': '#8b5fbf', // Deep lavender
-      'Estradiol enanthate': '#a78bce',         // Soft purple
-      'Estradiol undecylate': '#c9b1e4',        // Pale purple
-      'Polyestradiol phosphate': '#7952b3'      // Rich purple
-    };
-    return colors[esterName] || '#b794f6';
-  };
 
   const addOrUpdateDose = (day: number, dose: number = 6, ester = DEFAULT_ESTER) => {
     const existingIndex = doses.findIndex(d => d.day === day);
