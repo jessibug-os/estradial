@@ -62,6 +62,20 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   // Default to Estradiol valerate for new injections
   const DEFAULT_ESTER = ESTRADIOL_ESTERS[1];
 
+  // Color mapping for different esters
+  const getEsterColor = (esterName: string): string => {
+    const colors: { [key: string]: string } = {
+      'Estradiol benzoate': '#e74c3c',          // Red
+      'Estradiol valerate': '#007bff',          // Blue (default)
+      'Estradiol cypionate': '#9b59b6',         // Purple
+      'Estradiol cypionate suspension': '#8e44ad', // Darker purple
+      'Estradiol enanthate': '#27ae60',         // Green
+      'Estradiol undecylate': '#f39c12',        // Orange
+      'Polyestradiol phosphate': '#16a085'      // Teal
+    };
+    return colors[esterName] || '#007bff';
+  };
+
   const addOrUpdateDose = (day: number, dose: number = 6, ester = DEFAULT_ESTER) => {
     const existingIndex = doses.findIndex(d => d.day === day);
     let newDoses = [...doses];
@@ -105,24 +119,25 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   };
 
   const renderTimelineDay = (day: number) => {
-    const dose = getDoseAtDay(day);
+    const doseData = doses.find(d => d.day === day);
+    const dose = doseData?.dose || null;
     const hasInjection = dose !== null;
     const isSelected = selectedDose === day;
     const isEditing = editingDose === day;
 
-    if (hasInjection) {
+    if (hasInjection && doseData) {
+      const backgroundColor = getEsterColor(doseData.ester.name);
+
       return (
         <div
           key={day}
           onClick={() => {
-            if (!isEditing) {
-              setSelectedDose(isSelected ? null : day);
-            }
+            setSelectedDose(isSelected ? null : day);
           }}
           style={{
             width: '100%',
             aspectRatio: '1',
-            backgroundColor: '#007bff',
+            backgroundColor,
             border: isSelected ? '2px solid #ffc107' : '1px solid #dee2e6',
             borderRadius: '4px',
             cursor: 'pointer',
@@ -134,10 +149,10 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             fontWeight: '600',
             position: 'relative',
             transition: 'all 0.15s ease',
-            boxShadow: '0 1px 2px rgba(0,123,255,0.3)',
-            padding: '4px'
+            boxShadow: `0 1px 2px ${backgroundColor}66`,
+            overflow: 'hidden'
           }}
-          title={`Day ${day}: ${dose}mg`}
+          title={`Day ${day}: ${dose}mg (${doseData.ester.name})`}
         >
           <input
             type="text"
@@ -170,10 +185,11 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                 e.currentTarget.blur();
               }
             }}
-            onClick={(e) => e.stopPropagation()}
+            readOnly={!isEditing}
             style={{
-              width: '100%',
-              height: '100%',
+              width: '3ch',
+              minWidth: '3ch',
+              maxWidth: '3ch',
               border: 'none',
               background: 'transparent',
               textAlign: 'center',
@@ -182,7 +198,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
               color: 'white',
               padding: '0',
               outline: 'none',
-              cursor: isEditing ? 'text' : 'pointer'
+              cursor: 'pointer'
             }}
           />
         </div>
