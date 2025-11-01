@@ -45,8 +45,11 @@ function App() {
   return (
     <div className="App" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <header style={{ marginBottom: '30px', textAlign: 'center' }}>
-        <h1>Estradiol Ester Pharmacokinetic Calculator</h1>
-        <p>Calculate and visualize estradiol concentration over time based on injection schedule</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+          <img src={process.env.PUBLIC_URL + '/favicon.png'} alt="Shimeji mascot" style={{ width: '48px', height: '48px' }} />
+          <h1 style={{ margin: 0 }}>Estradiol Ester Pharmacokinetic Calculator</h1>
+        </div>
+        <p style={{ marginTop: '10px' }}>Calculate and visualize estradiol concentration over time based on injection schedule</p>
       </header>
 
       <VisualTimeline
