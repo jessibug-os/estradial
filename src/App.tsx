@@ -13,21 +13,22 @@ function App() {
   // Load from URL or use defaults
   const loadFromURL = (): { doses: Dose[], scheduleLength: number, graphDays: number, repeat: boolean } => {
     const params = new URLSearchParams(window.location.search);
-    const scheduleData = params.get('schedule');
+    const scheduleData = params.get('s');
 
     if (scheduleData) {
       try {
+        // Format: [[day,dose,esterIndex],...],scheduleLength,graphDays,repeat
         const decoded = JSON.parse(atob(scheduleData));
-        const doses = decoded.doses.map((d: any) => ({
-          day: d.d,
-          dose: d.m,
-          ester: ESTRADIOL_ESTERS.find(e => e.name === d.e) || ESTRADIOL_ESTERS[1]
+        const doses = decoded[0].map((d: any) => ({
+          day: d[0],
+          dose: d[1],
+          ester: ESTRADIOL_ESTERS[d[2]] || ESTRADIOL_ESTERS[1]
         }));
         return {
           doses,
-          scheduleLength: decoded.sl || 29,
-          graphDays: decoded.gd || 90,
-          repeat: decoded.r || false
+          scheduleLength: decoded[1] || 29,
+          graphDays: decoded[2] || 90,
+          repeat: decoded[3] || false
         };
       } catch (e) {
         console.error('Failed to parse URL schedule', e);
@@ -51,19 +52,20 @@ function App() {
 
   // Update URL when schedule changes
   useEffect(() => {
-    const scheduleData = {
-      doses: doses.map(d => ({
-        d: d.day,
-        m: d.dose,
-        e: d.ester.name
-      })),
-      sl: scheduleLength,
-      gd: graphDisplayDays,
-      r: repeatSchedule
-    };
+    // Format: [[day,dose,esterIndex],...],scheduleLength,graphDays,repeat
+    const scheduleData = [
+      doses.map(d => [
+        d.day,
+        d.dose,
+        ESTRADIOL_ESTERS.findIndex(e => e.name === d.ester.name)
+      ]),
+      scheduleLength,
+      graphDisplayDays,
+      repeatSchedule
+    ];
 
     const encoded = btoa(JSON.stringify(scheduleData));
-    const newURL = `${window.location.pathname}?schedule=${encoded}`;
+    const newURL = `${window.location.pathname}?s=${encoded}`;
     window.history.replaceState({}, '', newURL);
   }, [doses, scheduleLength, graphDisplayDays, repeatSchedule]);
 
