@@ -118,16 +118,16 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
           }
         }}
         style={{
-          width: '32px',
-          height: '32px',
+          width: '100%',
+          aspectRatio: '1',
           backgroundColor: hasInjection ? '#007bff' : '#f8f9fa',
           border: isSelected ? '2px solid #ffc107' : '1px solid #dee2e6',
-          borderRadius: '2px',
+          borderRadius: '4px',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '10px',
+          fontSize: '13px',
           color: hasInjection ? 'white' : '#6c757d',
           fontWeight: hasInjection ? '600' : '400',
           position: 'relative',
@@ -137,17 +137,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
         title={hasInjection ? `Day ${day}: ${dose}mg` : `Day ${day}: Click to add injection`}
       >
         {hasInjection ? dose?.toFixed(1) : day % 7 === 0 ? day : ''}
-        {day % 7 === 0 && !hasInjection && (
-          <div style={{
-            position: 'absolute',
-            bottom: '-16px',
-            fontSize: '8px',
-            color: '#6c757d',
-            fontWeight: '500'
-          }}>
-            {day}
-          </div>
-        )}
       </div>
     );
   };
@@ -160,7 +149,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
         weekDays.push(renderTimelineDay(day));
       }
       weeks.push(
-        <div key={week} style={{ display: 'flex', marginBottom: '4px', gap: '1px' }}>
+        <div key={week} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', marginBottom: '6px' }}>
           {weekDays}
         </div>
       );
@@ -367,25 +356,28 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             </div>
           </div>
         </div>
-        <div style={{ 
-          border: '2px solid #dee2e6', 
+        <div style={{
+          border: '2px solid #dee2e6',
           borderRadius: '4px',
           backgroundColor: '#ffffff',
-          overflow: 'hidden'
+          height: '400px',
+          overflowY: 'auto',
+          padding: '12px'
         }}>
-          <div style={{ padding: '8px' }}>
-            {renderWeeks()}
-          </div>
+          {renderWeeks()}
         </div>
       </div>
 
-      <div style={{ 
-        padding: '20px', 
-        backgroundColor: selectedDoseData ? '#fff3cd' : '#ffffff', 
+      <div style={{
+        padding: '20px',
+        backgroundColor: selectedDoseData ? '#fff3cd' : '#ffffff',
         border: `1px solid ${selectedDoseData ? '#ffeaa7' : '#dee2e6'}`,
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        height: 'fit-content'
+        height: '400px',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         {selectedDoseData ? (
           <>
