@@ -41,3 +41,64 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Purple checkboxes */
+input[type="checkbox"] {
+  accent-color: #b794f6;
+}
+
+/* Purple range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Slider track - Chrome, Safari, Edge */
+input[type="range"]::-webkit-slider-track {
+  background: #e9ecef;
+  height: 8px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #b794f6;
+  cursor: pointer;
+  margin-top: -6px;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #9b72cf;
+}
+
+/* Slider track - Firefox */
+input[type="range"]::-moz-range-track {
+  background: #e9ecef;
+  height: 8px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #b794f6;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: #9b72cf;
+}
+
+/* Purple focus for number inputs */
+input[type="number"]:focus {
+  outline: 2px solid #7952b3;
+  outline-offset: 2px;
+}
