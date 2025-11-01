@@ -31,37 +31,38 @@ export const CIS_WOMEN_CYCLE: ReferencePoint[] = [
   { day: 9, estradiol: 65 },
   { day: 10, estradiol: 85 },
 
-  // Late follicular phase (days 11-13)
+  // Late follicular phase (days 11-14)
   { day: 11, estradiol: 110 },
   { day: 12, estradiol: 126 },
   { day: 13, estradiol: 175 },
+  { day: 14, estradiol: 210 },
 
-  // Ovulation (days 14-15)
-  { day: 14, estradiol: 223 },
-  { day: 15, estradiol: 200 },
+  // Ovulation (day 15)
+  { day: 15, estradiol: 223 },
 
   // Early luteal phase (days 16-18)
-  { day: 16, estradiol: 150 },
-  { day: 17, estradiol: 106 },
-  { day: 18, estradiol: 100 },
+  { day: 16, estradiol: 200 },
+  { day: 17, estradiol: 150 },
+  { day: 18, estradiol: 106 },
 
-  // Intermediate luteal phase (days 19-24)
-  { day: 19, estradiol: 115 },
-  { day: 20, estradiol: 125 },
-  { day: 21, estradiol: 138 },
-  { day: 22, estradiol: 135 },
-  { day: 23, estradiol: 125 },
-  { day: 24, estradiol: 115 },
+  // Intermediate luteal phase (days 19-25)
+  { day: 19, estradiol: 100 },
+  { day: 20, estradiol: 115 },
+  { day: 21, estradiol: 125 },
+  { day: 22, estradiol: 138 },
+  { day: 23, estradiol: 135 },
+  { day: 24, estradiol: 125 },
+  { day: 25, estradiol: 115 },
 
-  // Late luteal phase (days 25-28)
-  { day: 25, estradiol: 108 },
-  { day: 26, estradiol: 85 },
-  { day: 27, estradiol: 55 },
-  { day: 28, estradiol: 40 },
+  // Late luteal phase (days 26-29)
+  { day: 26, estradiol: 108 },
+  { day: 27, estradiol: 85 },
+  { day: 28, estradiol: 55 },
+  { day: 29, estradiol: 40 },
 ];
 
 export function generateReferenceCycle(totalDays: number): ReferencePoint[] {
-  const cycleLength = 28;
+  const cycleLength = 29;
   const referenceData: ReferencePoint[] = [];
 
   for (let day = 0; day <= totalDays; day++) {
