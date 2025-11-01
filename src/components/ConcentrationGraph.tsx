@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   LineChart,
   Line,
@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import { ConcentrationPoint } from '../utils/pharmacokinetics';
 import { generateReferenceCycle, ReferenceCycleType, REFERENCE_CYCLES } from '../data/referenceData';
+import { useDebouncedInput } from '../hooks/useDebounce';
 
 interface ConcentrationGraphProps {
   data: ConcentrationPoint[];
@@ -27,24 +28,16 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
   referenceCycleType,
   onReferenceCycleTypeChange
 }) => {
-  const [graphInputValue, setGraphInputValue] = useState(viewDays.toString());
-
-  // Sync local input state with prop changes
-  useEffect(() => {
-    setGraphInputValue(viewDays.toString());
-  }, [viewDays]);
-
-  // Debounce graph display days changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const numValue = parseInt(graphInputValue);
+  const [graphInputValue, setGraphInputValue] = useDebouncedInput(
+    viewDays.toString(),
+    (value) => {
+      const numValue = parseInt(value);
       if (!isNaN(numValue) && numValue >= 1 && numValue !== viewDays) {
         onViewDaysChange(numValue);
       }
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [graphInputValue, viewDays, onViewDaysChange]);
+    },
+    1000
+  );
 
   const formatNumber = (value: number): number => {
     if (value >= 1000) {

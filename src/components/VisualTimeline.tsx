@@ -5,6 +5,7 @@ import { optimizeSchedule } from '../utils/scheduleOptimizer';
 import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
 import { getEsterColor } from '../constants/colors';
+import { useDebouncedInput } from '../hooks/useDebounce';
 
 interface VisualTimelineProps {
   doses: Dose[];
@@ -32,13 +33,31 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   maxDays = 120
 }) => {
   const [selectedDose, setSelectedDose] = useState<number | null>(null);
-  const [scheduleInputValue, setScheduleInputValue] = useState(viewDays.toString());
+  const [scheduleInputValue, setScheduleInputValue] = useDebouncedInput(
+    viewDays.toString(),
+    (value) => {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) && numValue >= 1 && numValue !== viewDays) {
+        onViewDaysChange(numValue);
+      }
+    },
+    1000
+  );
   const [showResetModal, setShowResetModal] = useState(false);
   const [showPresetsMenu, setShowPresetsMenu] = useState(false);
   const [showOptimizerModal, setShowOptimizerModal] = useState(false);
   const [selectedEsters, setSelectedEsters] = useState<EstradiolEster[]>([ESTRADIOL_ESTERS[1]]);
   const [maxInjections, setMaxInjections] = useState<number>(7);
-  const [maxInjectionsInput, setMaxInjectionsInput] = useState<string>('7');
+  const [maxInjectionsInput, setMaxInjectionsInput] = useDebouncedInput(
+    '7',
+    (value) => {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) && numValue >= 1 && numValue !== maxInjections) {
+        setMaxInjections(numValue);
+      }
+    },
+    500
+  );
   const [granularity, setGranularity] = useState<number>(0.1);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationProgress, setOptimizationProgress] = useState(0);
@@ -47,35 +66,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [editingDose, setEditingDose] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   const inputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
-
-  // Sync local input state with prop changes
-  useEffect(() => {
-    setScheduleInputValue(viewDays.toString());
-  }, [viewDays]);
-
-  // Debounce schedule length changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const numValue = parseInt(scheduleInputValue);
-      if (!isNaN(numValue) && numValue >= 1 && numValue !== viewDays) {
-        onViewDaysChange(numValue);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timeoutId);
-  }, [scheduleInputValue, viewDays, onViewDaysChange]);
-
-  // Debounce max injections changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const numValue = parseInt(maxInjectionsInput);
-      if (!isNaN(numValue) && numValue >= 1 && numValue !== maxInjections) {
-        setMaxInjections(numValue);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [maxInjectionsInput, maxInjections]);
 
   // Auto-remove injections beyond schedule length when it's reduced
   useEffect(() => {
