@@ -1,46 +1,112 @@
-# Getting Started with Create React App
+# 💉 EstraDial
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A friendly pharmacokinetic calculator for visualizing estradiol ester concentrations over time ✨
 
-## Available Scripts
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge)](https://jessibug-os.github.io/EstraDial)
+[![React](https://img.shields.io/badge/React-19.2-61dafb?style=for-the-badge&logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 🌸 What is this?
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+EstraDial helps you calculate and visualize how estradiol concentration changes in your body over time based on your injection schedule. It uses real pharmacokinetic models to show you what's happening between doses!
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### ✨ Features
 
-### `npm test`
+- 📊 **Interactive Graph** - See your estradiol levels over time with a beautiful chart
+- 📅 **Visual Calendar** - Click-to-add injection scheduling (so much better than typing!)
+- 💊 **7 Different Esters** - Choose from valerate, cypionate, enanthate, and more
+- 🔄 **Schedule Repetition** - Automatically repeat your cycle to see steady-state levels
+- 🌊 **Reference Cycle** - Compare against cis women's natural menstrual cycle
+- 🎨 **Per-Dose Customization** - Mix and match different esters in the same schedule
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🚀 Quick Start
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+**[Try it live here!](https://jessibug-os.github.io/EstraDial)** No installation needed! 💝
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Or run it locally:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm install
+npm start
+```
 
-### `npm run eject`
+Open [http://localhost:3000](http://localhost:3000) and start planning! 🎉
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+---
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🎯 How to Use
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+1. **Click on days** in the calendar to add injections
+2. **Click existing injections** to edit dose amount and ester type
+3. **Adjust the schedule length** to match your cycle
+4. **Toggle "Repeat"** to see what steady-state levels look like
+5. **Watch the graph** update in real-time! 📈
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+---
 
-## Learn More
+## 🧪 Available Esters
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Estradiol Benzoate
+- Estradiol Valerate (default)
+- Estradiol Cypionate
+- Estradiol Cypionate Suspension
+- Estradiol Enanthate
+- Estradiol Undecylate
+- Polyestradiol Phosphate
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Each ester has unique pharmacokinetic parameters (D, k1, k2, k3) that affect how quickly it's absorbed and metabolized!
+
+---
+
+## 📚 The Science
+
+EstraDial uses a three-compartment pharmacokinetic model:
+
+```
+c(t) = (dose × D / 5) × k1 × k2 × [exponential decay terms]
+```
+
+Where:
+- **D** = Dose constant (varies by ester)
+- **k1, k2, k3** = Rate constants for absorption and elimination
+- **t** = Time in days since injection
+
+The model calculates concentration for each injection and sums them to show total levels over time.
+
+---
+
+## 🛠️ Built With
+
+- **React 19** + TypeScript
+- **Recharts** for beautiful visualizations
+- **Create React App** for the foundation
+- **GitHub Pages** for hosting
+- Lots of ✨ and 💝
+
+---
+
+## ⚠️ Important Note
+
+**This tool is for educational purposes only!** Always consult with your healthcare provider about hormone therapy. This calculator provides estimates based on pharmacokinetic models, but individual responses can vary.
+
+---
+
+## 💖 Contributing
+
+Found a bug? Have an idea? Open an issue or PR! All contributions welcome 🌈
+
+---
+
+## 📜 License
+
+MIT License - feel free to use, modify, and share!
+
+---
+
+<p align="center">
+  Made with 💙 by <a href="https://github.com/jessibug-os">jessibug-os</a>
+</p>
