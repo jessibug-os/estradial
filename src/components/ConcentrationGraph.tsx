@@ -70,11 +70,16 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({ data, viewDays,
 
   // Filter and combine data for the chart based on viewDays
   const filteredData = data.filter(point => point.time <= viewDays);
-  const combinedData = filteredData.map((point, index) => ({
-    time: point.time,
-    concentration: point.concentration,
-    reference: referenceData[index]?.estradiol || null
-  }));
+  const combinedData = filteredData.map((point) => {
+    // Find the reference value for this specific day
+    const referencePoint = referenceData.find(r => r.day === Math.floor(point.time));
+
+    return {
+      time: point.time,
+      concentration: point.concentration,
+      reference: referencePoint?.estradiol || null
+    };
+  });
 
   return (
     <div style={{ marginTop: '20px' }}>
