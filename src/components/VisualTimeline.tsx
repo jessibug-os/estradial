@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dose, ESTRADIOL_ESTERS, EstradiolEster } from '../data/estradiolEsters';
 import { PRESETS } from '../data/presets';
 import { optimizeSchedule } from '../utils/scheduleOptimizer';
 import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
-import { getEsterColor } from '../constants/colors';
 import { useDebouncedInput } from '../hooks/useDebounce';
-import { parsePositiveInteger, parsePositiveFloat } from '../utils/validation';
+import { parsePositiveInteger } from '../utils/validation';
+import { TimelineDayCell } from './VisualTimeline/TimelineDayCell';
 
 interface VisualTimelineProps {
   doses: Dose[];
@@ -66,7 +66,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const [previousViewDays, setPreviousViewDays] = useState(viewDays);
   const [editingDose, setEditingDose] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
-  const inputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
 
   // Auto-remove injections beyond schedule length when it's reduced
   useEffect(() => {
@@ -125,127 +124,42 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
 
   const renderTimelineDay = (day: number) => {
     const doseData = doses.find(d => d.day === day);
-    const dose = doseData?.dose || null;
-    const hasInjection = dose !== null;
+    const dose = doseData || null;
     const isSelected = selectedDose === day;
     const isEditing = editingDose === day;
 
-    if (hasInjection && doseData) {
-      const backgroundColor = getEsterColor(doseData.ester.name);
-
-      return (
-        <div
-          key={day}
-          onClick={() => {
-            setSelectedDose(isSelected ? null : day);
-          }}
-          className="testcell"
-          style={{
-            width: '100%',
-            aspectRatio: '1',
-            backgroundColor,
-            border: isSelected ? '2px solid #7952b3' : '1px solid #dee2e6',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '13px',
-            color: 'white',
-            fontWeight: '600',
-            position: 'relative',
-            transition: 'all 0.15s ease',
-            boxShadow: `0 1px 2px ${backgroundColor}66`,
-            overflow: 'hidden'
-          }}
-          title={`Day ${day}: ${formatNumber(dose)}mg (${doseData.ester.name})`}
-        >
-          <input
-            ref={(el) => { inputRefs.current[day] = el; }}
-            type="text"
-            value={isEditing ? editingValue : formatNumber(dose)}
-            onChange={(e) => {
-              setEditingValue(e.target.value);
-            }}
-            onFocus={(e) => {
-              setEditingDose(day);
-              setEditingValue(dose?.toString() || '');
-              e.target.select();
-            }}
-            onBlur={() => {
-              const newDose = parsePositiveFloat(editingValue, 0);
-              if (newDose !== null) {
-                updateDoseAmount(day, newDose);
-              }
-              setEditingDose(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                const newDose = parsePositiveFloat(editingValue, 0);
-                if (newDose !== null) {
-                  updateDoseAmount(day, newDose);
-                }
-                setEditingDose(null);
-                e.currentTarget.blur();
-              } else if (e.key === 'Escape') {
-                setEditingDose(null);
-                e.currentTarget.blur();
-              }
-            }}
-            readOnly={!isEditing}
-            style={{
-              width: '4ch',
-              minWidth: '4ch',
-              maxWidth: '4ch',
-              border: 'none',
-              background: 'transparent',
-              textAlign: 'center',
-              fontSize: '13px',
-              fontWeight: '600',
-              color: 'white',
-              padding: '0',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          />
-        </div>
-      );
-    }
-
     return (
-      <div
+      <TimelineDayCell
         key={day}
-        onClick={() => {
+        day={day}
+        dose={dose}
+        isSelected={isSelected}
+        isEditing={isEditing}
+        editingValue={editingValue}
+        onSelect={() => {
+          setSelectedDose(isSelected ? null : day);
+        }}
+        onAdd={() => {
           addOrUpdateDose(day);
-          // Select this dose for the side panel and enter editing mode
           setSelectedDose(day);
           setEditingDose(day);
           setEditingValue('6');
-          setTimeout(() => {
-            inputRefs.current[day]?.focus();
-            inputRefs.current[day]?.select();
-          }, 10);
         }}
-        style={{
-          width: '100%',
-          aspectRatio: '1',
-          backgroundColor: '#f8f9fa',
-          border: '1px solid #dee2e6',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '13px',
-          color: '#6c757d',
-          fontWeight: '400',
-          position: 'relative',
-          transition: 'all 0.15s ease'
+        onEditStart={() => {
+          setEditingDose(day);
+          const currentDose = doses.find(d => d.day === day);
+          setEditingValue(currentDose?.dose.toString() || '');
         }}
-        title={`Day ${day}: Click to add injection`}
-      >
-        {day % 7 === 0 ? day : ''}
-      </div>
+        onEditEnd={() => {
+          setEditingDose(null);
+        }}
+        onUpdateDose={updateDoseAmount}
+        onEditingValueChange={setEditingValue}
+        onInputFocus={(element) => {
+          element.focus();
+          element.select();
+        }}
+      />
     );
   };
 
