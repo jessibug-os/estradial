@@ -9,6 +9,7 @@ import {
 import { ReferenceCycleType } from './data/referenceData';
 import { encodeSchedule, decodeSchedule, decodeLegacySchedule } from './utils/urlEncoding';
 import { PHARMACOKINETICS, DEFAULTS } from './constants/pharmacokinetics';
+import { DEFAULT_ESTER_CONCENTRATIONS, Z_INDEX } from './constants/defaults';
 import VisualTimeline from './components/VisualTimeline';
 import ConcentrationGraph from './components/ConcentrationGraph';
 
@@ -56,15 +57,7 @@ function App() {
   const [steadyState, setSteadyState] = useState(false);
   const [referenceCycleType, setReferenceCycleType] = useState<ReferenceCycleType>(initial.cycleType);
   // Map of ester name to concentration in mg/mL
-  const [esterConcentrations, setEsterConcentrations] = useState<Record<string, number>>({
-    'Estradiol benzoate': 40,
-    'Estradiol valerate': 40,
-    'Estradiol cypionate': 5,
-    'Estradiol cypionate suspension': 5,
-    'Estradiol enanthate': 10,
-    'Estradiol undecylate': 100,
-    'Polyestradiol phosphate': 40,
-  });
+  const [esterConcentrations, setEsterConcentrations] = useState<Record<string, number>>(DEFAULT_ESTER_CONCENTRATIONS);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [tempEsterConcentrations, setTempEsterConcentrations] = useState(esterConcentrations);
   const [concentrationInputs, setConcentrationInputs] = useState<Record<string, string>>({});
@@ -147,7 +140,7 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 100
+          zIndex: Z_INDEX.SETTINGS_BUTTON
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = '#495057';
@@ -211,7 +204,7 @@ function App() {
               right: 0,
               bottom: 0,
               backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 1000,
+              zIndex: Z_INDEX.MODAL_BACKDROP,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -228,7 +221,7 @@ function App() {
               padding: '24px',
               borderRadius: '8px',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-              zIndex: 1001,
+              zIndex: Z_INDEX.MODAL_ELEVATED,
               maxWidth: '500px',
               width: '90%',
               maxHeight: '80vh',

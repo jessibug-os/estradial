@@ -6,6 +6,7 @@ import { formatNumber } from '../utils/formatters';
 import { useDebouncedInput } from '../hooks/useDebounce';
 import { parsePositiveInteger } from '../utils/validation';
 import ErrorBoundary from './ErrorBoundary';
+import { OPTIMIZER_DEFAULTS, Z_INDEX } from '../constants/defaults';
 
 interface OptimizerModalProps {
   isOpen: boolean;
@@ -31,9 +32,9 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
   // Default to Estradiol valerate for optimizer
   const DEFAULT_OPTIMIZER_ESTER = ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!;
   const [selectedEsters, setSelectedEsters] = useState<EstradiolEster[]>([DEFAULT_OPTIMIZER_ESTER]);
-  const [maxInjections, setMaxInjections] = useState<number>(7);
+  const [maxInjections, setMaxInjections] = useState<number>(OPTIMIZER_DEFAULTS.DEFAULT_MAX_INJECTIONS);
   const [maxInjectionsInput, setMaxInjectionsInput] = useDebouncedInput(
-    '7',
+    OPTIMIZER_DEFAULTS.DEFAULT_MAX_INJECTIONS.toString(),
     (value) => {
       const numValue = parsePositiveInteger(value, 1);
       if (numValue !== null && numValue !== maxInjections) {
@@ -42,7 +43,7 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
     },
     500
   );
-  const [granularity, setGranularity] = useState<number>(0.05); // mL
+  const [granularity, setGranularity] = useState<number>(OPTIMIZER_DEFAULTS.DEFAULT_GRANULARITY_ML);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizationProgress, setOptimizationProgress] = useState(0);
   const [optimizationScore, setOptimizationScore] = useState(0);
@@ -62,7 +63,7 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
             padding: '24px',
             borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-            zIndex: 1001,
+            zIndex: Z_INDEX.MODAL_ELEVATED,
             maxWidth: '400px',
             textAlign: 'center'
           }}
@@ -99,7 +100,7 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
           right: 0,
           bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1000,
+          zIndex: Z_INDEX.MODAL_CONTENT,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -116,7 +117,7 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-          zIndex: 1001,
+          zIndex: Z_INDEX.MODAL_ELEVATED,
           maxWidth: '500px',
           width: '90%'
         }}
@@ -307,8 +308,8 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
                     referenceCycleType,
                     steadyState: true, // Always use steady state for optimization
                     granularity,
-                    maxDosePerInjection: 10,
-                    minDosePerInjection: 0.1,
+                    maxDosePerInjection: OPTIMIZER_DEFAULTS.MAX_DOSE_PER_INJECTION,
+                    minDosePerInjection: OPTIMIZER_DEFAULTS.MIN_DOSE_PER_INJECTION,
                     maxInjectionsPerCycle: maxInjections,
                     esterConcentrations
                   },

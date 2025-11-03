@@ -1,3 +1,5 @@
+import { Z_INDEX } from '../constants/defaults';
+
 interface ResetConfirmationProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,7 +24,7 @@ const ResetConfirmation: React.FC<ResetConfirmationProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 999
+          zIndex: Z_INDEX.MODAL_BACKDROP
         }}
         onClick={onClose}
       />
@@ -38,7 +40,7 @@ const ResetConfirmation: React.FC<ResetConfirmationProps> = ({
           borderRadius: '8px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           width: '280px',
-          zIndex: 1000,
+          zIndex: Z_INDEX.MODAL_CONTENT,
           border: '1px solid #dee2e6'
         }}
         onClick={(e) => e.stopPropagation()}

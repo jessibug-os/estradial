@@ -1,5 +1,6 @@
 import { Dose } from '../data/estradiolEsters';
 import { PRESETS } from '../data/presets';
+import { Z_INDEX } from '../constants/defaults';
 
 interface PresetsMenuProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ const PresetsMenu: React.FC<PresetsMenuProps> = ({ isOpen, onClose, onSelectPres
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 999
+          zIndex: Z_INDEX.MODAL_BACKDROP
         }}
         onClick={onClose}
       />
@@ -33,7 +34,7 @@ const PresetsMenu: React.FC<PresetsMenuProps> = ({ isOpen, onClose, onSelectPres
           border: '1px solid #dee2e6',
           borderRadius: '6px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          zIndex: 1000,
+          zIndex: Z_INDEX.MODAL_CONTENT,
           minWidth: '280px',
           maxHeight: '400px',
           overflowY: 'auto'
