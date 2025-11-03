@@ -268,7 +268,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     return weeks;
   };
 
-  const selectedDoseData = selectedDose !== null ? doses.find(d => d.day === selectedDose) : null;
+  const selectedDoseData = selectedDose !== null ? (doses.find(d => d.day === selectedDose) ?? null) : null;
 
   // Calculate dosage display text
   const getDosageDisplayText = (): string => {
