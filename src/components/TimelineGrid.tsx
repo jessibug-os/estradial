@@ -45,6 +45,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
           style={{
             width: '100%',
             aspectRatio: '1',
+            minHeight: '0',
             backgroundColor: COLORS.white,
             border: isSelected ? `2px solid ${COLORS.primaryHover}` : `1px solid ${COLORS.gray300}`,
             borderRadius: BORDER_RADIUS.sm,
@@ -53,8 +54,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             flexDirection: 'column' as const,
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '3px',
-            padding: '4px',
+            gap: '2px',
+            padding: '3px',
             position: 'relative' as const,
             transition: 'all 0.15s ease',
             overflow: 'hidden'
@@ -92,21 +93,22 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                 key={index}
                 style={{
                   backgroundColor,
-                  borderRadius: '12px',
-                  padding: '2px 6px',
+                  borderRadius: '8px',
+                  padding: '1px 4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: TYPOGRAPHY.fontSize.xs,
+                  fontSize: '10px',
                   fontWeight: TYPOGRAPHY.fontWeight.semibold,
                   color: COLORS.white,
                   boxShadow: `0 1px 2px ${backgroundColor}66`,
-                  minHeight: '20px',
+                  minHeight: '16px',
                   width: '100%',
                   maxWidth: '100%',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap' as const
+                  whiteSpace: 'nowrap' as const,
+                  flexShrink: 0
                 }}
                 title={`${formatNumber(doseData.dose)}mg = ${formatNumber(volumeMl, 3)}mL (${medicationName})`}
               >
@@ -152,13 +154,13 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                   }}
                   readOnly={!isEditing || index !== 0}
                   style={{
-                    width: '3ch',
-                    minWidth: '3ch',
-                    maxWidth: '3ch',
+                    width: '2.5ch',
+                    minWidth: '2.5ch',
+                    maxWidth: '2.5ch',
                     border: 'none',
                     background: 'transparent',
                     textAlign: 'center' as const,
-                    fontSize: TYPOGRAPHY.fontSize.xs,
+                    fontSize: '10px',
                     fontWeight: TYPOGRAPHY.fontWeight.semibold,
                     color: COLORS.white,
                     padding: '0',
@@ -166,7 +168,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontSize: TYPOGRAPHY.fontSize.xs, marginLeft: '1px' }}>mg</span>
+                <span style={{ fontSize: '10px', marginLeft: '1px' }}>mg</span>
               </div>
             );
           })}
