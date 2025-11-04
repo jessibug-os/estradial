@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { Dose, ESTRADIOL_ESTERS } from './data/estradiolEsters';
 import {
@@ -13,6 +13,8 @@ import { DEFAULT_ESTER_CONCENTRATIONS, Z_INDEX } from './constants/defaults';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, BUTTON_STYLES, INPUT_STYLES, MODAL_STYLES, mergeStyles } from './constants/styles';
 import VisualTimeline from './components/VisualTimeline';
 import ConcentrationGraph from './components/ConcentrationGraph';
+import OptimizerModal from './components/OptimizerModal';
+import { optimizeSchedule } from './utils/scheduleOptimizer';
 
 function App() {
   // Load from URL or use defaults
@@ -63,6 +65,16 @@ function App() {
   const [tempEsterConcentrations, setTempEsterConcentrations] = useState(esterConcentrations);
   const [concentrationInputs, setConcentrationInputs] = useState<Record<string, string>>({});
 
+  // Optimize mode state
+  const [optimizeMode, setOptimizeMode] = useState(false);
+  const [showOptimizerSettingsModal, setShowOptimizerSettingsModal] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizerSettings, setOptimizerSettings] = useState({
+    selectedEsters: [ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!],
+    maxInjections: 4,
+    granularity: 0.05
+  });
+
   // Update URL when schedule changes
   useEffect(() => {
     const encoded = encodeSchedule({
@@ -111,6 +123,67 @@ function App() {
     const filteredData = data.filter(point => point.time >= 0);
     setConcentrationData(filteredData);
   }, [doses, scheduleLength, graphDisplayDays, repeatSchedule, steadyState]);
+
+  // Handle optimization
+  const handleRunOptimization = async () => {
+    setIsOptimizing(true);
+    try {
+      const result = await optimizeSchedule(
+        {
+          availableEsters: optimizerSettings.selectedEsters,
+          scheduleLength,
+          referenceCycleType,
+          steadyState: true,
+          granularity: optimizerSettings.granularity,
+          maxDosePerInjection: 10,
+          minDosePerInjection: 0.1,
+          maxInjectionsPerCycle: optimizerSettings.maxInjections,
+          esterConcentrations
+        }
+      );
+
+      setDoses(result.doses);
+      setRepeatSchedule(true);
+      setSteadyState(true);
+    } catch (error) {
+      console.error('Optimization failed:', error);
+      alert('Optimization failed. Please try again.');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Auto-run optimization when settings change (with debounce)
+  const optimizationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const previousMaxInjectionsRef = useRef<number>(optimizerSettings.maxInjections);
+
+  useEffect(() => {
+    if (!optimizeMode) return;
+
+    // Don't run on initial mount, only when maxInjections actually changes
+    if (previousMaxInjectionsRef.current === optimizerSettings.maxInjections) {
+      previousMaxInjectionsRef.current = optimizerSettings.maxInjections;
+      return;
+    }
+
+    previousMaxInjectionsRef.current = optimizerSettings.maxInjections;
+
+    // Clear any pending optimization
+    if (optimizationTimeoutRef.current) {
+      clearTimeout(optimizationTimeoutRef.current);
+    }
+
+    // Debounce optimization by 500ms
+    optimizationTimeoutRef.current = setTimeout(() => {
+      handleRunOptimization();
+    }, 500);
+
+    return () => {
+      if (optimizationTimeoutRef.current) {
+        clearTimeout(optimizationTimeoutRef.current);
+      }
+    };
+  }, [optimizeMode, optimizerSettings.maxInjections]);
 
   return (
     <div className="App" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
@@ -175,8 +248,8 @@ function App() {
         onRepeatScheduleChange={setRepeatSchedule}
         steadyState={steadyState}
         onSteadyStateChange={setSteadyState}
-        referenceCycleType={referenceCycleType}
         esterConcentrations={esterConcentrations}
+        onOptimizeModeChange={setOptimizeMode}
       />
       <ConcentrationGraph
         data={concentrationData}
@@ -184,6 +257,30 @@ function App() {
         onViewDaysChange={setGraphDisplayDays}
         referenceCycleType={referenceCycleType}
         onReferenceCycleTypeChange={setReferenceCycleType}
+        optimizeMode={optimizeMode}
+        onOptimizeModeChange={setOptimizeMode}
+        optimizerSettings={optimizerSettings}
+        onOptimizerSettingsChange={setOptimizerSettings}
+        onOpenOptimizerSettings={() => setShowOptimizerSettingsModal(true)}
+        isOptimizing={isOptimizing}
+      />
+
+      <OptimizerModal
+        isOpen={showOptimizerSettingsModal}
+        onClose={() => setShowOptimizerSettingsModal(false)}
+        viewDays={scheduleLength}
+        referenceCycleType={referenceCycleType}
+        esterConcentrations={esterConcentrations}
+        selectedEsters={optimizerSettings.selectedEsters}
+        maxInjections={optimizerSettings.maxInjections}
+        granularity={optimizerSettings.granularity}
+        onSettingsChange={(selectedEsters, granularity) => {
+          setOptimizerSettings({
+            ...optimizerSettings,
+            selectedEsters,
+            granularity
+          });
+        }}
       />
 
       <footer style={{ marginTop: '40px', textAlign: 'center', color: '#666', fontSize: '14px' }}>

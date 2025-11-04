@@ -1,12 +1,9 @@
-import { useState } from 'react';
-import { Dose, ESTRADIOL_ESTERS, EstradiolEster } from '../data/estradiolEsters';
-import { optimizeSchedule } from '../utils/scheduleOptimizer';
+import { useState, useEffect } from 'react';
+import { ESTRADIOL_ESTERS, EstradiolEster } from '../data/estradiolEsters';
 import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
-import { useDebouncedInput } from '../hooks/useDebounce';
-import { parsePositiveInteger } from '../utils/validation';
 import ErrorBoundary from './ErrorBoundary';
-import { OPTIMIZER_DEFAULTS, Z_INDEX } from '../constants/defaults';
+import { Z_INDEX } from '../constants/defaults';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, BUTTON_STYLES, INPUT_STYLES, MODAL_STYLES, mergeStyles } from '../constants/styles';
 
 interface OptimizerModalProps {
@@ -15,39 +12,27 @@ interface OptimizerModalProps {
   viewDays: number;
   referenceCycleType: ReferenceCycleType;
   esterConcentrations: Record<string, number>;
-  onOptimizedSchedule: (doses: Dose[]) => void;
-  onEnableRepeat: () => void;
-  onEnableSteadyState: () => void;
+  selectedEsters: EstradiolEster[];
+  maxInjections: number;
+  granularity: number;
+  onSettingsChange: (selectedEsters: EstradiolEster[], granularity: number) => void;
 }
 
 const OptimizerModal: React.FC<OptimizerModalProps> = ({
   isOpen,
   onClose,
-  viewDays,
-  referenceCycleType,
-  esterConcentrations,
-  onOptimizedSchedule,
-  onEnableRepeat,
-  onEnableSteadyState
+  selectedEsters: initialSelectedEsters,
+  granularity: initialGranularity,
+  onSettingsChange
 }) => {
-  // Default to Estradiol valerate for optimizer
-  const DEFAULT_OPTIMIZER_ESTER = ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!;
-  const [selectedEsters, setSelectedEsters] = useState<EstradiolEster[]>([DEFAULT_OPTIMIZER_ESTER]);
-  const [maxInjections, setMaxInjections] = useState<number>(OPTIMIZER_DEFAULTS.DEFAULT_MAX_INJECTIONS);
-  const [maxInjectionsInput, setMaxInjectionsInput] = useDebouncedInput(
-    OPTIMIZER_DEFAULTS.DEFAULT_MAX_INJECTIONS.toString(),
-    (value) => {
-      const numValue = parsePositiveInteger(value, 1);
-      if (numValue !== null && numValue !== maxInjections) {
-        setMaxInjections(numValue);
-      }
-    },
-    500
-  );
-  const [granularity, setGranularity] = useState<number>(OPTIMIZER_DEFAULTS.DEFAULT_GRANULARITY_ML);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationProgress, setOptimizationProgress] = useState(0);
-  const [optimizationScore, setOptimizationScore] = useState(0);
+  const [selectedEsters, setSelectedEsters] = useState<EstradiolEster[]>(initialSelectedEsters);
+  const [granularity, setGranularity] = useState<number>(initialGranularity);
+
+  // Update local state when props change
+  useEffect(() => {
+    setSelectedEsters(initialSelectedEsters);
+    setGranularity(initialGranularity);
+  }, [initialSelectedEsters, initialGranularity, isOpen]);
 
   if (!isOpen) return null;
 
@@ -91,42 +76,10 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
         })}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={MODAL_STYLES.title}>Schedule Optimizer</h3>
+        <h3 style={MODAL_STYLES.title}>Optimizer Settings</h3>
         <p style={{ fontSize: TYPOGRAPHY.fontSize.md, color: COLORS.gray600, marginBottom: SPACING['3xl'] }}>
-          Select which esters you have access to, and the optimizer will find the best injection schedule to match your selected reference cycle.
+          Configure which esters you have access to and the volume granularity for optimization.
         </p>
-
-        <div style={{ marginBottom: SPACING['3xl'] }}>
-          <label style={{ fontSize: TYPOGRAPHY.fontSize.md, fontWeight: TYPOGRAPHY.fontWeight.semibold, display: 'block', marginBottom: SPACING.lg }}>
-            Injections Per Cycle:
-          </label>
-          <div style={{ display: 'flex', gap: SPACING.xl, alignItems: 'center' }}>
-            <input
-              type="number"
-              min="1"
-              max={viewDays}
-              value={maxInjectionsInput}
-              onChange={(e) => setMaxInjectionsInput(e.target.value)}
-              onBlur={(e) => {
-                const val = e.target.value;
-                const parsed = parsePositiveInteger(val, 1);
-                if (parsed === null) {
-                  setMaxInjectionsInput('1');
-                  setMaxInjections(1);
-                }
-              }}
-              style={mergeStyles(INPUT_STYLES.base, INPUT_STYLES.numberLarge, {
-                fontSize: TYPOGRAPHY.fontSize.md
-              })}
-            />
-            <span style={{ fontSize: TYPOGRAPHY.fontSize.base, color: COLORS.gray600 }}>
-              injections (in {viewDays} days = {formatNumber(maxInjections / viewDays * 7)} per week)
-            </span>
-          </div>
-          <div style={{ fontSize: TYPOGRAPHY.fontSize.sm, color: COLORS.gray600, marginTop: SPACING.sm }}>
-            The optimizer will find the best schedule using {maxInjections} injection{maxInjections !== 1 ? 's' : ''}.
-          </div>
-        </div>
 
         <div style={{ marginBottom: SPACING['3xl'] }}>
           <label style={{ fontSize: TYPOGRAPHY.fontSize.md, fontWeight: TYPOGRAPHY.fontWeight.semibold, display: 'block', marginBottom: SPACING.lg }}>
@@ -207,33 +160,6 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
           </div>
         </div>
 
-        {isOptimizing && (
-          <div style={{ marginBottom: SPACING['2xl'] }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: SPACING.sm }}>
-              <span style={{ fontSize: TYPOGRAPHY.fontSize.base, color: COLORS.gray600 }}>
-                Optimizing... {optimizationProgress}%
-              </span>
-              <span style={{ fontSize: TYPOGRAPHY.fontSize.sm, color: '#999' }}>
-                Score: {formatNumber(optimizationScore)}
-              </span>
-            </div>
-            <div style={{
-              width: '100%',
-              height: SPACING.md,
-              backgroundColor: COLORS.gray200,
-              borderRadius: BORDER_RADIUS.sm,
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                width: `${optimizationProgress}%`,
-                height: '100%',
-                backgroundColor: COLORS.primary,
-                transition: 'width 0.3s ease'
-              }} />
-            </div>
-          </div>
-        )}
-
         <div style={{ display: 'flex', gap: SPACING.lg }}>
           <button
             onClick={onClose}
@@ -244,55 +170,19 @@ const OptimizerModal: React.FC<OptimizerModalProps> = ({
             Cancel
           </button>
           <button
-            onClick={async () => {
+            onClick={() => {
               if (selectedEsters.length === 0) return;
-
-              setIsOptimizing(true);
-              setOptimizationProgress(0);
-              setOptimizationScore(0);
-
-              // Small delay to allow UI to update
-              await new Promise(resolve => setTimeout(resolve, 50));
-
-              try {
-                const result = await optimizeSchedule(
-                  {
-                    availableEsters: selectedEsters,
-                    scheduleLength: viewDays,
-                    referenceCycleType,
-                    steadyState: true, // Always use steady state for optimization
-                    granularity,
-                    maxDosePerInjection: OPTIMIZER_DEFAULTS.MAX_DOSE_PER_INJECTION,
-                    minDosePerInjection: OPTIMIZER_DEFAULTS.MIN_DOSE_PER_INJECTION,
-                    maxInjectionsPerCycle: maxInjections,
-                    esterConcentrations
-                  },
-                  (progress, score) => {
-                    setOptimizationProgress(Math.round(progress));
-                    setOptimizationScore(score);
-                  }
-                );
-
-                onOptimizedSchedule(result.doses);
-                onEnableRepeat(); // Enable repeat mode for optimized schedules
-                onEnableSteadyState(); // Enable steady state for optimized schedules
-                onClose();
-              } catch (error) {
-                console.error('Optimization failed:', error);
-                alert('Optimization failed. Please try again.');
-              } finally {
-                setIsOptimizing(false);
-                setOptimizationProgress(0);
-              }
+              onSettingsChange(selectedEsters, granularity);
+              onClose();
             }}
-            disabled={selectedEsters.length === 0 || isOptimizing}
+            disabled={selectedEsters.length === 0}
             style={mergeStyles(BUTTON_STYLES.base, BUTTON_STYLES.primary, {
               flex: 1,
-              backgroundColor: selectedEsters.length === 0 || isOptimizing ? COLORS.gray300 : COLORS.primary,
-              cursor: selectedEsters.length === 0 || isOptimizing ? 'not-allowed' : 'pointer'
+              backgroundColor: selectedEsters.length === 0 ? COLORS.gray300 : COLORS.primary,
+              cursor: selectedEsters.length === 0 ? 'not-allowed' : 'pointer'
             })}
           >
-            {isOptimizing ? 'Optimizing...' : 'Optimize Schedule'}
+            Save Settings
           </button>
         </div>
       </div>

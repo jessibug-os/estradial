@@ -19,6 +19,16 @@ interface ConcentrationGraphProps {
   onViewDaysChange: (days: number) => void;
   referenceCycleType: ReferenceCycleType;
   onReferenceCycleTypeChange: (type: ReferenceCycleType) => void;
+  optimizeMode: boolean;
+  onOptimizeModeChange: (mode: boolean) => void;
+  optimizerSettings: {
+    selectedEsters: any[];
+    maxInjections: number;
+    granularity: number;
+  };
+  onOptimizerSettingsChange: (settings: any) => void;
+  onOpenOptimizerSettings: () => void;
+  isOptimizing: boolean;
 }
 
 const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
@@ -26,7 +36,13 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
   viewDays,
   onViewDaysChange,
   referenceCycleType,
-  onReferenceCycleTypeChange
+  onReferenceCycleTypeChange,
+  optimizeMode,
+  onOptimizeModeChange,
+  optimizerSettings,
+  onOptimizerSettingsChange,
+  onOpenOptimizerSettings,
+  isOptimizing
 }) => {
   const [graphInputValue, setGraphInputValue] = useDebouncedInput(
     viewDays.toString(),
@@ -131,7 +147,41 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
   return (
     <div style={{ marginTop: SPACING['3xl'] }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.lg, flexWrap: 'wrap' as const, gap: SPACING.lg }}>
-        <h3 style={{ margin: 0 }}>Estradiol Concentration Over Time</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.lg }}>
+          <h3 style={{ margin: 0 }}>Estradiol Concentration Over Time</h3>
+
+          {/* Optimize Mode Badge */}
+          {optimizeMode && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: SPACING.sm,
+              backgroundColor: COLORS.primary,
+              color: COLORS.white,
+              padding: `${SPACING.xs} ${SPACING.md}`,
+              borderRadius: BORDER_RADIUS.sm,
+              fontSize: TYPOGRAPHY.fontSize.sm
+            }}>
+              <span>Optimize: {optimizerSettings.maxInjections} injections</span>
+              <button
+                onClick={() => onOptimizeModeChange(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: COLORS.white,
+                  cursor: 'pointer',
+                  fontSize: TYPOGRAPHY.fontSize.lg,
+                  padding: 0,
+                  lineHeight: 1
+                }}
+                title="Exit optimize mode"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.xl, flexWrap: 'wrap' as const }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
             <label style={{ fontSize: TYPOGRAPHY.fontSize.base, color: COLORS.gray600 }}>
@@ -186,6 +236,74 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
         </div>
       </div>
 
+      {/* Optimize Mode Slider */}
+      {optimizeMode && (
+        <div style={{
+          marginBottom: SPACING.lg,
+          padding: SPACING.lg,
+          backgroundColor: COLORS.gray50,
+          borderRadius: BORDER_RADIUS.sm
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: SPACING.lg,
+            marginBottom: SPACING.md
+          }}>
+            <label style={{ fontSize: TYPOGRAPHY.fontSize.base, fontWeight: TYPOGRAPHY.fontWeight.semibold, minWidth: '140px' }}>
+              Injection Count:
+            </label>
+            <input
+              type="range"
+              min="1"
+              max={currentCycleInfo?.cycleLength || 29}
+              value={optimizerSettings.maxInjections}
+              onChange={(e) => {
+                const newInjections = parseInt(e.target.value);
+                onOptimizerSettingsChange({
+                  ...optimizerSettings,
+                  maxInjections: newInjections
+                });
+              }}
+              disabled={isOptimizing}
+              style={{ flex: 1, cursor: isOptimizing ? 'wait' : 'pointer' }}
+            />
+            <span style={{ fontSize: TYPOGRAPHY.fontSize.base, minWidth: '60px', textAlign: 'center' }}>
+              {optimizerSettings.maxInjections}
+            </span>
+          </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: SPACING.lg
+          }}>
+            <div style={{ fontSize: TYPOGRAPHY.fontSize.sm, color: COLORS.gray600 }}>
+              {isOptimizing ? (
+                <span style={{ color: COLORS.primary, fontStyle: 'italic' }}>Optimizing...</span>
+              ) : (
+                <>Esters: {optimizerSettings.selectedEsters.map(e => e.name).join(', ')} • Granularity: {optimizerSettings.granularity} mL</>
+              )}
+            </div>
+            <button
+              onClick={onOpenOptimizerSettings}
+              disabled={isOptimizing}
+              style={{
+                padding: `${SPACING.sm} ${SPACING.lg}`,
+                backgroundColor: isOptimizing ? COLORS.gray300 : COLORS.gray600,
+                color: COLORS.white,
+                border: 'none',
+                borderRadius: BORDER_RADIUS.sm,
+                cursor: isOptimizing ? 'wait' : 'pointer',
+                fontSize: TYPOGRAPHY.fontSize.base
+              }}
+            >
+              Settings
+            </button>
+          </div>
+        </div>
+      )}
+
       {currentCycleInfo && (
         <div style={{
           fontSize: TYPOGRAPHY.fontSize.sm,
@@ -193,7 +311,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
           marginBottom: SPACING.lg,
           fontStyle: 'italic'
         }}>
-          {currentCycleInfo.description} — Source: {currentCycleInfo.source}
+          {currentCycleInfo.description} — Cycle Length: {currentCycleInfo.cycleLength} days — Source: {currentCycleInfo.source}
         </div>
       )}
       

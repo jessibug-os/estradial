@@ -10,6 +10,8 @@ export interface ReferenceCycleInfo {
   name: string;
   description: string;
   source: string;
+  sourceUrl?: string;
+  cycleLength: number; // Length of the reference cycle in days (e.g., 29 for menstrual cycle)
   data: ReferencePoint[];
 }
 
@@ -215,6 +217,8 @@ export const REFERENCE_CYCLES: ReferenceCycleInfo[] = [
     name: 'Typical Cycle',
     description: 'Median levels from 23 cis women (PMC8042396)',
     source: 'PMC8042396',
+    sourceUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8042396/',
+    cycleLength: 29,
     data: TYPICAL_CYCLE_DATA
   },
   {
@@ -222,6 +226,8 @@ export const REFERENCE_CYCLES: ReferenceCycleInfo[] = [
     name: 'HRT Target Ranges',
     description: 'Natural cycle equivalent targets for HRT',
     source: 'Transfeminine Science',
+    sourceUrl: 'https://transfemscience.org/articles/e2-equivalent-doses/',
+    cycleLength: 29,
     data: HRT_TARGET_DATA
   },
   {
@@ -229,6 +235,8 @@ export const REFERENCE_CYCLES: ReferenceCycleInfo[] = [
     name: 'Conservative Range',
     description: 'Lower bound (5th percentile) of natural variation',
     source: 'PMC8042396',
+    sourceUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8042396/',
+    cycleLength: 29,
     data: CONSERVATIVE_CYCLE_DATA
   },
   {
@@ -236,6 +244,8 @@ export const REFERENCE_CYCLES: ReferenceCycleInfo[] = [
     name: 'High Physiological',
     description: 'Upper bound (95th percentile) of natural variation',
     source: 'PMC8042396',
+    sourceUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8042396/',
+    cycleLength: 29,
     data: HIGH_PHYSIOLOGICAL_DATA
   }
 ];

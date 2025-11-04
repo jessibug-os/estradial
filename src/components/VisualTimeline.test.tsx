@@ -1,13 +1,13 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import VisualTimeline from './VisualTimeline';
 import { Dose } from '../data/estradiolEsters';
-import { ReferenceCycleType } from '../data/referenceData';
 
 describe('VisualTimeline', () => {
   const mockOnDosesChange = jest.fn();
   const mockOnViewDaysChange = jest.fn();
   const mockOnRepeatScheduleChange = jest.fn();
   const mockOnSteadyStateChange = jest.fn();
+  const mockOnOptimizeModeChange = jest.fn();
   const mockEsterConcentrations = {
     'Estradiol cypionate': 40,
     'Estradiol valerate': 40,
@@ -24,8 +24,8 @@ describe('VisualTimeline', () => {
     onRepeatScheduleChange: mockOnRepeatScheduleChange,
     steadyState: false,
     onSteadyStateChange: mockOnSteadyStateChange,
-    referenceCycleType: 'natural' as ReferenceCycleType,
-    esterConcentrations: mockEsterConcentrations
+    esterConcentrations: mockEsterConcentrations,
+    onOptimizeModeChange: mockOnOptimizeModeChange
   };
 
   beforeEach(() => {

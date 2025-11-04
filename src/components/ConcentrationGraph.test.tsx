@@ -2,10 +2,20 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ConcentrationGraph from './ConcentrationGraph';
 import { ConcentrationPoint } from '../utils/pharmacokinetics';
 import { REFERENCE_CYCLES } from '../data/referenceData';
+import { ESTRADIOL_ESTERS } from '../data/estradiolEsters';
 
 describe('ConcentrationGraph', () => {
   const mockOnViewDaysChange = jest.fn();
   const mockOnReferenceCycleTypeChange = jest.fn();
+  const mockOnOptimizeModeChange = jest.fn();
+  const mockOnOptimizerSettingsChange = jest.fn();
+  const mockOnOpenOptimizerSettings = jest.fn();
+
+  const defaultOptimizerSettings = {
+    selectedEsters: [ESTRADIOL_ESTERS[0]],
+    maxInjections: 4,
+    granularity: 0.05
+  };
 
   const sampleData: ConcentrationPoint[] = [
     { time: 0, concentration: 100 },
@@ -15,6 +25,15 @@ describe('ConcentrationGraph', () => {
     { time: 4, concentration: 80 },
     { time: 5, concentration: 70 },
   ];
+
+  const defaultProps = {
+    optimizeMode: false,
+    onOptimizeModeChange: mockOnOptimizeModeChange,
+    optimizerSettings: defaultOptimizerSettings,
+    onOptimizerSettingsChange: mockOnOptimizerSettingsChange,
+    onOpenOptimizerSettings: mockOnOpenOptimizerSettings,
+    isOptimizing: false
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -29,6 +48,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -43,6 +63,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -58,6 +79,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -73,6 +95,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -90,6 +113,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -108,6 +132,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -126,6 +151,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="conservative"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -145,6 +171,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -169,6 +196,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -187,6 +215,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -205,6 +234,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -225,6 +255,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -246,6 +277,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -262,6 +294,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -278,6 +311,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -297,6 +331,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -313,6 +348,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -325,6 +361,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -339,6 +376,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="typical"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 
@@ -352,6 +390,7 @@ describe('ConcentrationGraph', () => {
           onViewDaysChange={mockOnViewDaysChange}
           referenceCycleType="conservative"
           onReferenceCycleTypeChange={mockOnReferenceCycleTypeChange}
+          {...defaultProps}
         />
       );
 

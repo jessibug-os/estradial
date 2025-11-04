@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Dose, ESTRADIOL_ESTERS, EstradiolEster } from '../data/estradiolEsters';
-import { ReferenceCycleType } from '../data/referenceData';
 import { formatNumber } from '../utils/formatters';
 import { useDebouncedInput } from '../hooks/useDebounce';
 import { parsePositiveInteger } from '../utils/validation';
-import OptimizerModal from './OptimizerModal';
 import PresetsMenu from './PresetsMenu';
 import ResetConfirmation from './ResetConfirmation';
 import DoseEditor from './DoseEditor';
@@ -20,8 +18,8 @@ interface VisualTimelineProps {
   onRepeatScheduleChange: (repeat: boolean) => void;
   steadyState: boolean;
   onSteadyStateChange: (steadyState: boolean) => void;
-  referenceCycleType: ReferenceCycleType;
   esterConcentrations: Record<string, number>;
+  onOptimizeModeChange: (mode: boolean) => void;
 }
 
 const VisualTimeline: React.FC<VisualTimelineProps> = ({
@@ -33,8 +31,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   onRepeatScheduleChange,
   steadyState,
   onSteadyStateChange,
-  referenceCycleType,
-  esterConcentrations
+  esterConcentrations,
+  onOptimizeModeChange
 }) => {
   const [selectedDose, setSelectedDose] = useState<number | null>(null);
   const [scheduleInputValue, setScheduleInputValue] = useDebouncedInput(
@@ -49,7 +47,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   );
   const [showResetModal, setShowResetModal] = useState(false);
   const [showPresetsMenu, setShowPresetsMenu] = useState(false);
-  const [showOptimizerModal, setShowOptimizerModal] = useState(false);
   const [previousViewDays, setPreviousViewDays] = useState(viewDays);
 
   // Auto-remove injections beyond schedule length when it's reduced
@@ -147,7 +144,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             <div style={{ display: 'flex', gap: SPACING.md }}>
               <div style={{ position: 'relative' }}>
                 <button
-                  onClick={() => setShowOptimizerModal(true)}
+                  onClick={() => onOptimizeModeChange(true)}
                   style={mergeStyles(BUTTON_STYLES.base, BUTTON_STYLES.small, BUTTON_STYLES.primary)}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.primaryHover}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.primary}
@@ -215,18 +212,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
             </div>
           </div>
 
-
-          {/* AI Optimizer Modal */}
-          <OptimizerModal
-            isOpen={showOptimizerModal}
-            onClose={() => setShowOptimizerModal(false)}
-            viewDays={viewDays}
-            referenceCycleType={referenceCycleType}
-            esterConcentrations={esterConcentrations}
-            onOptimizedSchedule={(doses) => onDosesChange(doses)}
-            onEnableRepeat={() => onRepeatScheduleChange(true)}
-            onEnableSteadyState={() => onSteadyStateChange(true)}
-          />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.xl }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.sm }}>
