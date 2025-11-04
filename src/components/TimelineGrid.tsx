@@ -1,35 +1,32 @@
-import { useState, useRef } from 'react';
 import { Dose } from '../data/estradiolEsters';
 import { EstradiolMedication } from '../types/medication';
 import { formatNumber } from '../utils/formatters';
 import { getEsterColor } from '../constants/colors';
-import { parsePositiveFloat } from '../utils/validation';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../constants/styles';
 
 interface TimelineGridProps {
   doses: Dose[];
   viewDays: number;
   selectedDose: number | null;
+  selectedDoseIndex: number | null;
   esterConcentrations: Record<string, number>;
   defaultEster: EstradiolMedication;
   onDoseClick: (day: number) => void;
+  onPillClick: (index: number) => void;
   onDoseAdd: (day: number, dose: number, ester: EstradiolMedication) => void;
-  onDoseUpdate: (day: number, newDose: number) => void;
 }
 
 const TimelineGrid: React.FC<TimelineGridProps> = ({
   doses,
   viewDays,
   selectedDose,
+  selectedDoseIndex,
   esterConcentrations,
   defaultEster,
   onDoseClick,
-  onDoseAdd,
-  onDoseUpdate
+  onPillClick,
+  onDoseAdd
 }) => {
-  const inputRefs = useRef<{ [key: number]: HTMLInputElement | null }>({});
-  const [editingDose, setEditingDose] = useState<number | null>(null);
-  const [editingValue, setEditingValue] = useState<string>('');
 
   const renderTimelineDay = (day: number) => {
     const dosesOnDay = doses.filter(d => d.day === day);
@@ -82,95 +79,65 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
           )}
 
           {/* Render each medication as a pill */}
-          {dosesOnDay.map((doseData, index) => {
+          {dosesOnDay.map((doseData) => {
+            // Find global index of this dose
+            const globalIndex = doses.findIndex(d => d === doseData);
             const medication = doseData.medication || doseData.ester; // Backward compatibility
             const medicationName = medication?.name || 'Unknown';
             const backgroundColor = getEsterColor(medicationName);
             const concentration = esterConcentrations[medicationName] || 40;
             const volumeMl = doseData.dose / concentration;
-            const isEditing = editingDose === day;
+            const isSelected = selectedDoseIndex === globalIndex;
+
+            // Get abbreviated name (first letter of each word, max 3 chars)
+            const abbreviatedName = medicationName
+              .split(' ')
+              .map(word => word[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 3);
 
             return (
               <div
-                key={index}
+                key={globalIndex}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPillClick(globalIndex);
+                }}
                 style={{
                   backgroundColor,
                   borderRadius: '6px',
-                  padding: '1px 3px',
+                  padding: '2px 4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: '2px',
                   fontSize: '9px',
                   fontWeight: TYPOGRAPHY.fontWeight.semibold,
                   color: COLORS.white,
-                  boxShadow: `0 1px 2px ${backgroundColor}66`,
-                  minHeight: '14px',
-                  maxHeight: '14px',
+                  boxShadow: isSelected ? `0 0 0 2px ${COLORS.primaryHover}` : `0 1px 2px ${backgroundColor}66`,
+                  minHeight: '16px',
+                  maxHeight: '16px',
                   width: 'calc(100% - 2px)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap' as const,
-                  flexShrink: 0
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  opacity: isSelected ? 1 : 0.95
                 }}
-                title={`${formatNumber(doseData.dose)}mg = ${formatNumber(volumeMl, 3)}mL (${medicationName})`}
+                title={`${medicationName}: ${formatNumber(doseData.dose)}mg = ${formatNumber(volumeMl, 3)}mL @ ${concentration}mg/mL`}
+                onMouseOver={(e) => {
+                  if (!isSelected) e.currentTarget.style.opacity = '1';
+                }}
+                onMouseOut={(e) => {
+                  if (!isSelected) e.currentTarget.style.opacity = '0.95';
+                }}
               >
-                <input
-                  ref={(el) => {
-                    if (index === 0) inputRefs.current[day] = el;
-                  }}
-                  type="text"
-                  value={isEditing && index === 0 ? editingValue : formatNumber(doseData.dose)}
-                  onChange={(e) => {
-                    if (index === 0) setEditingValue(e.target.value);
-                  }}
-                  onFocus={(e) => {
-                    if (index === 0) {
-                      setEditingDose(day);
-                      setEditingValue(doseData.dose?.toString() || '');
-                      e.target.select();
-                    }
-                  }}
-                  onBlur={() => {
-                    if (index === 0) {
-                      const newDose = parsePositiveFloat(editingValue, 0);
-                      if (newDose !== null) {
-                        onDoseUpdate(day, newDose);
-                      }
-                      setEditingDose(null);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (index === 0) {
-                      if (e.key === 'Enter') {
-                        const newDose = parsePositiveFloat(editingValue, 0);
-                        if (newDose !== null) {
-                          onDoseUpdate(day, newDose);
-                        }
-                        setEditingDose(null);
-                        e.currentTarget.blur();
-                      } else if (e.key === 'Escape') {
-                        setEditingDose(null);
-                        e.currentTarget.blur();
-                      }
-                    }
-                  }}
-                  readOnly={!isEditing || index !== 0}
-                  style={{
-                    width: '2ch',
-                    minWidth: '2ch',
-                    maxWidth: '2ch',
-                    border: 'none',
-                    background: 'transparent',
-                    textAlign: 'center' as const,
-                    fontSize: '9px',
-                    fontWeight: TYPOGRAPHY.fontWeight.semibold,
-                    color: COLORS.white,
-                    padding: '0',
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontSize: '9px', marginLeft: '1px' }}>mg</span>
+                <span style={{ fontSize: '8px', opacity: 0.9 }}>{abbreviatedName}</span>
+                <span style={{ fontSize: '9px' }}>{formatNumber(doseData.dose)}mg</span>
+                <span style={{ fontSize: '7px', opacity: 0.8 }}>({formatNumber(volumeMl, 2)}mL)</span>
               </div>
             );
           })}
@@ -183,14 +150,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         key={day}
         onClick={() => {
           onDoseAdd(day, 6, defaultEster);
-          // Select this dose and enter editing mode
+          // Select the newly added dose
           onDoseClick(day);
-          setEditingDose(day);
-          setEditingValue('6');
-          setTimeout(() => {
-            inputRefs.current[day]?.focus();
-            inputRefs.current[day]?.select();
-          }, 10);
         }}
         style={{
           width: '100%',

@@ -5,17 +5,23 @@ import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS, BUTTON_STYLES, INP
 
 interface DoseEditorProps {
   selectedDoseData: Dose | null;
-  onUpdateDoseEster: (day: number, esterName: string) => void;
-  onUpdateDoseAmount: (day: number, newDose: number) => void;
-  onRemoveDose: (day: number) => void;
+  selectedDoseIndex: number | null;
+  dosesOnSameDay: number;
+  onUpdateDoseMedication: (index: number, medicationName: string) => void;
+  onUpdateDoseAmount: (index: number, newDose: number) => void;
+  onRemoveDose: (index: number) => void;
+  onAddAnotherDose: (day: number) => void;
   onClose: () => void;
 }
 
 const DoseEditor: React.FC<DoseEditorProps> = ({
   selectedDoseData,
-  onUpdateDoseEster,
+  selectedDoseIndex,
+  dosesOnSameDay,
+  onUpdateDoseMedication,
   onUpdateDoseAmount,
   onRemoveDose,
+  onAddAnotherDose,
   onClose
 }) => {
   return (
@@ -30,15 +36,18 @@ const DoseEditor: React.FC<DoseEditorProps> = ({
       display: 'flex',
       flexDirection: 'column' as const
     }}>
-      {selectedDoseData ? (
+      {selectedDoseData && selectedDoseIndex !== null ? (
         <>
-          <h4 style={{ margin: `0 0 ${SPACING['2xl']} 0`, fontSize: TYPOGRAPHY.fontSize.lg, fontWeight: TYPOGRAPHY.fontWeight.semibold }}>Edit Injection - Day {selectedDoseData.day}</h4>
+          <h4 style={{ margin: `0 0 ${SPACING['2xl']} 0`, fontSize: TYPOGRAPHY.fontSize.lg, fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
+            Edit Injection - Day {selectedDoseData.day}
+            {dosesOnSameDay > 1 && <span style={{ fontSize: TYPOGRAPHY.fontSize.md, color: COLORS.gray600, marginLeft: SPACING.sm }}>({dosesOnSameDay} medications on this day)</span>}
+          </h4>
 
           <div style={{ marginBottom: SPACING['2xl'] }}>
             <label style={{ display: 'block', marginBottom: SPACING.md, fontWeight: TYPOGRAPHY.fontWeight.semibold, fontSize: TYPOGRAPHY.fontSize.md }}>Medication:</label>
             <select
               value={(selectedDoseData.medication || selectedDoseData.ester)?.name}
-              onChange={(e) => onUpdateDoseEster(selectedDoseData.day, e.target.value)}
+              onChange={(e) => onUpdateDoseMedication(selectedDoseIndex, e.target.value)}
               style={{
                 width: '100%',
                 padding: SPACING.md,
@@ -71,7 +80,7 @@ const DoseEditor: React.FC<DoseEditorProps> = ({
               <input
                 type="number"
                 value={formatNumber(selectedDoseData.dose)}
-                onChange={(e) => onUpdateDoseAmount(selectedDoseData.day, parseFloat(e.target.value) || 0)}
+                onChange={(e) => onUpdateDoseAmount(selectedDoseIndex, parseFloat(e.target.value) || 0)}
                 step="0.1"
                 min="0"
                 max="20"
@@ -124,7 +133,19 @@ const DoseEditor: React.FC<DoseEditorProps> = ({
               Done
             </button>
             <button
-              onClick={() => onRemoveDose(selectedDoseData.day)}
+              onClick={() => onAddAnotherDose(selectedDoseData.day)}
+              style={mergeStyles(BUTTON_STYLES.base, {
+                backgroundColor: COLORS.gray600,
+                color: COLORS.white,
+                borderRadius: BORDER_RADIUS.md
+              })}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.gray700}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.gray600}
+            >
+              Add Another Medication
+            </button>
+            <button
+              onClick={() => onRemoveDose(selectedDoseIndex)}
               style={mergeStyles(BUTTON_STYLES.base, BUTTON_STYLES.danger, {
                 borderRadius: BORDER_RADIUS.md
               })}

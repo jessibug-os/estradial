@@ -3,9 +3,10 @@ import DoseEditor from './DoseEditor';
 import { ESTRADIOL_ESTERS } from '../data/estradiolEsters';
 
 describe('DoseEditor', () => {
-  const mockOnUpdateDoseEster = jest.fn();
+  const mockOnUpdateDoseMedication = jest.fn();
   const mockOnUpdateDoseAmount = jest.fn();
   const mockOnRemoveDose = jest.fn();
+  const mockOnAddAnotherDose = jest.fn();
   const mockOnClose = jest.fn();
 
   const testDose = {
@@ -23,9 +24,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={null}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={null}
+          dosesOnSameDay={0}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -39,9 +43,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={null}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={null}
+          dosesOnSameDay={0}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -57,9 +64,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -71,9 +81,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -91,9 +104,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -101,17 +117,20 @@ describe('DoseEditor', () => {
       const select = screen.getByDisplayValue(testDose.medication.name);
       fireEvent.change(select, { target: { value: 'Estradiol cypionate' } });
 
-      expect(mockOnUpdateDoseEster).toHaveBeenCalledTimes(1);
-      expect(mockOnUpdateDoseEster).toHaveBeenCalledWith(5, 'Estradiol cypionate');
+      expect(mockOnUpdateDoseMedication).toHaveBeenCalledTimes(1);
+      expect(mockOnUpdateDoseMedication).toHaveBeenCalledWith(0, 'Estradiol cypionate');
     });
 
     it('should render dose input with correct value', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -125,9 +144,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -136,16 +158,19 @@ describe('DoseEditor', () => {
       fireEvent.change(input, { target: { value: '8' } });
 
       expect(mockOnUpdateDoseAmount).toHaveBeenCalledTimes(1);
-      expect(mockOnUpdateDoseAmount).toHaveBeenCalledWith(5, 8);
+      expect(mockOnUpdateDoseAmount).toHaveBeenCalledWith(0, 8);
     });
 
     it('should handle invalid dose input (empty string becomes 0)', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -153,16 +178,19 @@ describe('DoseEditor', () => {
       const input = screen.getByDisplayValue('6');
       fireEvent.change(input, { target: { value: '' } });
 
-      expect(mockOnUpdateDoseAmount).toHaveBeenCalledWith(5, 0);
+      expect(mockOnUpdateDoseAmount).toHaveBeenCalledWith(0, 0);
     });
 
     it('should display pharmacokinetic parameters', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -178,9 +206,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -195,9 +226,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={testDose}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -206,7 +240,7 @@ describe('DoseEditor', () => {
       fireEvent.click(removeButton);
 
       expect(mockOnRemoveDose).toHaveBeenCalledTimes(1);
-      expect(mockOnRemoveDose).toHaveBeenCalledWith(5);
+      expect(mockOnRemoveDose).toHaveBeenCalledWith(0);
     });
 
     it('should display dose amount with proper formatting', () => {
@@ -219,9 +253,12 @@ describe('DoseEditor', () => {
       render(
         <DoseEditor
           selectedDoseData={doseWithDecimal}
-          onUpdateDoseEster={mockOnUpdateDoseEster}
+          selectedDoseIndex={0}
+          dosesOnSameDay={1}
+          onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
+          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );

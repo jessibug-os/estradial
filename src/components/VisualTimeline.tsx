@@ -36,7 +36,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   esterConcentrations,
   onOptimizeModeChange
 }) => {
-  const [selectedDose, setSelectedDose] = useState<number | null>(null);
+  const [selectedDoseIndex, setSelectedDoseIndex] = useState<number | null>(null);
   const [scheduleInputValue, setScheduleInputValue] = useDebouncedInput(
     viewDays.toString(),
     (value) => {
@@ -58,26 +58,27 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
       if (dosesOutOfRange.length > 0) {
         const newDoses = doses.filter(d => d.day < viewDays);
         onDosesChange(newDoses);
-        if (selectedDose !== null && selectedDose >= viewDays) {
-          setSelectedDose(null);
+        // Clear selection if the selected dose was removed
+        if (selectedDoseIndex !== null && selectedDoseIndex >= newDoses.length) {
+          setSelectedDoseIndex(null);
         }
       }
     }
     setPreviousViewDays(viewDays);
-  }, [viewDays, doses, previousViewDays, selectedDose, onDosesChange]);
+  }, [viewDays, doses, previousViewDays, selectedDoseIndex, onDosesChange]);
 
   // Default to Estradiol valerate for new injections
   const DEFAULT_ESTER = ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!;
 
   const addOrUpdateDose = (day: number, dose: number = 6, ester: EstradiolMedication = DEFAULT_ESTER) => {
-    // For now, we still update the first dose on the day if it exists (backward compatibility)
-    // Later we can add UI to add multiple doses per day
     const existingIndex = doses.findIndex(d => d.day === day);
     let newDoses = [...doses];
 
     if (existingIndex >= 0) {
+      // Update existing dose
       newDoses[existingIndex] = { day, dose, medication: ester };
     } else {
+      // Add new dose
       newDoses.push({ day, dose, medication: ester });
       newDoses.sort((a, b) => a.day - b.day);
     }
@@ -85,52 +86,56 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     onDosesChange(newDoses);
   };
 
-  const removeDose = (day: number) => {
-    // Remove all doses on this day
-    const newDoses = doses.filter(d => d.day !== day);
-    onDosesChange(newDoses);
-    setSelectedDose(null);
-  };
-
-  const updateDoseAmount = (day: number, newDose: number) => {
-    // Update the first dose on this day (backward compatibility)
-    const dayDoses = doses.filter(d => d.day === day);
-    if (dayDoses.length === 0) return;
-
-    const newDoses = doses.map(d => {
-      if (d.day === day && d === dayDoses[0]) {
-        return { ...d, dose: newDose };
-      }
-      return d;
-    });
+  const addAnotherDoseToDay = (day: number) => {
+    // Add a new progesterone dose to the same day
+    const defaultProgesterone = PROGESTERONE_ROUTES[0]!; // Default to oral progesterone
+    const newDoses = [...doses, { day, dose: 100, medication: defaultProgesterone }];
+    newDoses.sort((a, b) => a.day - b.day);
     onDosesChange(newDoses);
   };
 
-  const updateDoseEster = (day: number, medicationName: string) => {
+  const removeDose = (index: number) => {
+    if (index < 0 || index >= doses.length) return;
+    const newDoses = doses.filter((_, i) => i !== index);
+    onDosesChange(newDoses);
+    setSelectedDoseIndex(null);
+  };
+
+  const updateDoseAmount = (index: number, newDose: number) => {
+    if (index < 0 || index >= doses.length) return;
+    const newDoses = [...doses];
+    newDoses[index] = { ...newDoses[index]!, dose: newDose };
+    onDosesChange(newDoses);
+  };
+
+  const updateDoseMedication = (index: number, medicationName: string) => {
+    if (index < 0 || index >= doses.length) return;
+
     // Find medication in either estradiol esters or progesterone routes
     const allMedications = [...ESTRADIOL_ESTERS, ...PROGESTERONE_ROUTES];
     const medication = allMedications.find(m => m.name === medicationName);
     if (!medication) return;
 
-    // Update the first dose on this day (backward compatibility)
-    const dayDoses = doses.filter(d => d.day === day);
-    if (dayDoses.length === 0) return;
-
-    const newDoses = doses.map(d => {
-      if (d.day === day && d === dayDoses[0]) {
-        return { ...d, medication };
-      }
-      return d;
-    });
+    const newDoses = [...doses];
+    newDoses[index] = { ...newDoses[index]!, medication };
     onDosesChange(newDoses);
   };
 
   const handleDoseClick = (day: number) => {
-    setSelectedDose(selectedDose === day ? null : day);
+    // When clicking on empty space in a day cell, select first dose on that day
+    const dosesOnDay = doses.map((d, idx) => ({ dose: d, index: idx })).filter(({ dose }) => dose.day === day);
+    if (dosesOnDay.length > 0) {
+      setSelectedDoseIndex(dosesOnDay[0]!.index);
+    }
   };
 
-  // Get the first dose on the selected day for the DoseEditor (backward compatibility)
-  const selectedDoseData = selectedDose !== null ? (doses.find(d => d.day === selectedDose) ?? null) : null;
+  const handlePillClick = (index: number) => {
+    // Directly select the clicked pill
+    setSelectedDoseIndex(index);
+  };
+
+  // Get the selected dose by index
+  const selectedDoseData = selectedDoseIndex !== null && selectedDoseIndex < doses.length ? doses[selectedDoseIndex]! : null;
 
   // Calculate dosage display text
   const getDosageDisplayText = (): string => {
@@ -193,7 +198,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                     onDosesChange(doses);
                     onViewDaysChange(scheduleLength);
                     onRepeatScheduleChange(repeat);
-                    setSelectedDose(null);
+                    setSelectedDoseIndex(null);
                   }}
                 />
               </div>
@@ -225,7 +230,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
                   onClose={() => setShowResetModal(false)}
                   onConfirm={() => {
                     onDosesChange([]);
-                    setSelectedDose(null);
+                    setSelectedDoseIndex(null);
                   }}
                   doseCount={doses.length}
                 />
@@ -310,21 +315,25 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
         <TimelineGrid
           doses={doses}
           viewDays={viewDays}
-          selectedDose={selectedDose}
+          selectedDose={selectedDoseData?.day ?? null}
+          selectedDoseIndex={selectedDoseIndex}
           esterConcentrations={esterConcentrations}
           defaultEster={DEFAULT_ESTER}
           onDoseClick={handleDoseClick}
+          onPillClick={handlePillClick}
           onDoseAdd={addOrUpdateDose}
-          onDoseUpdate={updateDoseAmount}
         />
       </div>
 
       <DoseEditor
         selectedDoseData={selectedDoseData}
-        onUpdateDoseEster={updateDoseEster}
+        selectedDoseIndex={selectedDoseIndex}
+        dosesOnSameDay={selectedDoseData ? doses.filter(d => d.day === selectedDoseData.day).length : 0}
+        onUpdateDoseMedication={updateDoseMedication}
         onUpdateDoseAmount={updateDoseAmount}
         onRemoveDose={removeDose}
-        onClose={() => setSelectedDose(null)}
+        onAddAnotherDose={addAnotherDoseToDay}
+        onClose={() => setSelectedDoseIndex(null)}
       />
     </div>
   );
