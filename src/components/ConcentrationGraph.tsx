@@ -29,6 +29,9 @@ interface ConcentrationGraphProps {
   onOptimizerSettingsChange: (settings: any) => void;
   onOpenOptimizerSettings: () => void;
   isOptimizing: boolean;
+  isFindingBestFit: boolean;
+  bestFitProgress: { current: number; total: number };
+  onBestFit: () => void;
 }
 
 const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
@@ -42,7 +45,10 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
   optimizerSettings,
   onOptimizerSettingsChange,
   onOpenOptimizerSettings,
-  isOptimizing
+  isOptimizing,
+  isFindingBestFit,
+  bestFitProgress,
+  onBestFit
 }) => {
   const [graphInputValue, setGraphInputValue] = useDebouncedInput(
     viewDays.toString(),
@@ -279,27 +285,48 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             gap: SPACING.lg
           }}>
             <div style={{ fontSize: TYPOGRAPHY.fontSize.sm, color: COLORS.gray600 }}>
-              {isOptimizing ? (
+              {isFindingBestFit ? (
+                <span style={{ color: COLORS.primary, fontStyle: 'italic' }}>
+                  Finding best fit... {bestFitProgress.current}/{bestFitProgress.total}
+                </span>
+              ) : isOptimizing ? (
                 <span style={{ color: COLORS.primary, fontStyle: 'italic' }}>Optimizing...</span>
               ) : (
                 <>Esters: {optimizerSettings.selectedEsters.map(e => e.name).join(', ')} • Granularity: {optimizerSettings.granularity} mL</>
               )}
             </div>
-            <button
-              onClick={onOpenOptimizerSettings}
-              disabled={isOptimizing}
-              style={{
-                padding: `${SPACING.sm} ${SPACING.lg}`,
-                backgroundColor: isOptimizing ? COLORS.gray300 : COLORS.gray600,
-                color: COLORS.white,
-                border: 'none',
-                borderRadius: BORDER_RADIUS.sm,
-                cursor: isOptimizing ? 'wait' : 'pointer',
-                fontSize: TYPOGRAPHY.fontSize.base
-              }}
-            >
-              Settings
-            </button>
+            <div style={{ display: 'flex', gap: SPACING.md }}>
+              <button
+                onClick={onBestFit}
+                disabled={isOptimizing}
+                style={{
+                  padding: `${SPACING.sm} ${SPACING.lg}`,
+                  backgroundColor: isOptimizing ? COLORS.gray300 : COLORS.primary,
+                  color: COLORS.white,
+                  border: 'none',
+                  borderRadius: BORDER_RADIUS.sm,
+                  cursor: isOptimizing ? 'wait' : 'pointer',
+                  fontSize: TYPOGRAPHY.fontSize.base
+                }}
+              >
+                Best Fit
+              </button>
+              <button
+                onClick={onOpenOptimizerSettings}
+                disabled={isOptimizing}
+                style={{
+                  padding: `${SPACING.sm} ${SPACING.lg}`,
+                  backgroundColor: isOptimizing ? COLORS.gray300 : COLORS.gray600,
+                  color: COLORS.white,
+                  border: 'none',
+                  borderRadius: BORDER_RADIUS.sm,
+                  cursor: isOptimizing ? 'wait' : 'pointer',
+                  fontSize: TYPOGRAPHY.fontSize.base
+                }}
+              >
+                Settings
+              </button>
+            </div>
           </div>
         </div>
       )}

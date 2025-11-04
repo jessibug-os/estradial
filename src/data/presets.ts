@@ -17,9 +17,9 @@ export const PRESETS: Preset[] = [
   {
     id: 'ev-5day',
     name: 'EV Every 5 Days',
-    description: '4mg valerate every 5 days (common regimen)',
+    description: '3mg valerate every 5 days (common regimen)',
     doses: [
-      { day: 0, dose: 4, ester: EV },
+      { day: 0, dose: 3, ester: EV },
     ],
     scheduleLength: 5,
     repeat: true
@@ -35,22 +35,11 @@ export const PRESETS: Preset[] = [
     repeat: true
   },
   {
-    id: 'ev-3.5day',
-    name: 'EV Every 3.5 Days',
-    description: '3mg valerate twice weekly (stable levels)',
-    doses: [
-      { day: 0, dose: 3, ester: EV },
-      { day: 3, dose: 3, ester: EV },
-    ],
-    scheduleLength: 7,
-    repeat: true
-  },
-  {
     id: 'ec-weekly',
     name: 'EC Weekly',
-    description: '5mg cypionate once per week',
+    description: '4mg cypionate once per week',
     doses: [
-      { day: 0, dose: 5, ester: EC },
+      { day: 0, dose: 4, ester: EC },
     ],
     scheduleLength: 7,
     repeat: true
@@ -68,9 +57,9 @@ export const PRESETS: Preset[] = [
   {
     id: 'een-weekly',
     name: 'EEn Weekly',
-    description: '5mg enanthate once per week',
+    description: '4mg enanthate once per week',
     doses: [
-      { day: 0, dose: 5, ester: EEn },
+      { day: 0, dose: 4, ester: EEn },
     ],
     scheduleLength: 7,
     repeat: true
@@ -80,14 +69,14 @@ export const PRESETS: Preset[] = [
     name: 'Frontload Start',
     description: 'Initial loading dose then maintenance (non-repeating)',
     doses: [
-      { day: 0, dose: 10, ester: EV },
-      { day: 3, dose: 6, ester: EV },
-      { day: 7, dose: 4, ester: EV },
-      { day: 11, dose: 4, ester: EV },
-      { day: 15, dose: 4, ester: EV },
-      { day: 19, dose: 4, ester: EV },
-      { day: 23, dose: 4, ester: EV },
-      { day: 27, dose: 4, ester: EV },
+      { day: 0, dose: 6, ester: EV },
+      { day: 3, dose: 3, ester: EV },
+      { day: 7, dose: 3, ester: EV },
+      { day: 11, dose: 3, ester: EV },
+      { day: 15, dose: 3, ester: EV },
+      { day: 19, dose: 3, ester: EV },
+      { day: 23, dose: 3, ester: EV },
+      { day: 27, dose: 3, ester: EV },
     ],
     scheduleLength: 30,
     repeat: false

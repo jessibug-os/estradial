@@ -69,6 +69,8 @@ function App() {
   const [optimizeMode, setOptimizeMode] = useState(false);
   const [showOptimizerSettingsModal, setShowOptimizerSettingsModal] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isFindingBestFit, setIsFindingBestFit] = useState(false);
+  const [bestFitProgress, setBestFitProgress] = useState({ current: 0, total: 0 });
   const [optimizerSettings, setOptimizerSettings] = useState({
     selectedEsters: [ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!],
     maxInjections: 4,
@@ -150,6 +152,60 @@ function App() {
       alert('Optimization failed. Please try again.');
     } finally {
       setIsOptimizing(false);
+    }
+  };
+
+  // Find best fit by testing all injection counts
+  const handleBestFit = async () => {
+    setIsFindingBestFit(true);
+    setIsOptimizing(true);
+
+    try {
+      let bestScore = Infinity;
+      let bestInjectionCount = optimizerSettings.maxInjections;
+      let bestDoses: Dose[] = [];
+
+      setBestFitProgress({ current: 0, total: scheduleLength });
+
+      for (let injections = 1; injections <= scheduleLength; injections++) {
+        setBestFitProgress({ current: injections, total: scheduleLength });
+
+        const result = await optimizeSchedule(
+          {
+            availableEsters: optimizerSettings.selectedEsters,
+            scheduleLength,
+            referenceCycleType,
+            steadyState: true,
+            granularity: optimizerSettings.granularity,
+            maxDosePerInjection: 10,
+            minDosePerInjection: 0.1,
+            maxInjectionsPerCycle: injections,
+            esterConcentrations
+          }
+        );
+
+        if (result.score < bestScore) {
+          bestScore = result.score;
+          bestInjectionCount = injections;
+          bestDoses = result.doses;
+        }
+      }
+
+      // Apply the best result
+      setOptimizerSettings({
+        ...optimizerSettings,
+        maxInjections: bestInjectionCount
+      });
+      setDoses(bestDoses);
+      setRepeatSchedule(true);
+      setSteadyState(true);
+    } catch (error) {
+      console.error('Best fit failed:', error);
+      alert('Best fit failed. Please try again.');
+    } finally {
+      setIsFindingBestFit(false);
+      setIsOptimizing(false);
+      setBestFitProgress({ current: 0, total: 0 });
     }
   };
 
@@ -263,6 +319,9 @@ function App() {
         onOptimizerSettingsChange={setOptimizerSettings}
         onOpenOptimizerSettings={() => setShowOptimizerSettingsModal(true)}
         isOptimizing={isOptimizing}
+        isFindingBestFit={isFindingBestFit}
+        bestFitProgress={bestFitProgress}
+        onBestFit={handleBestFit}
       />
 
       <OptimizerModal

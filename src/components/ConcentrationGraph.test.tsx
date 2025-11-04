@@ -10,6 +10,7 @@ describe('ConcentrationGraph', () => {
   const mockOnOptimizeModeChange = jest.fn();
   const mockOnOptimizerSettingsChange = jest.fn();
   const mockOnOpenOptimizerSettings = jest.fn();
+  const mockOnBestFit = jest.fn();
 
   const defaultOptimizerSettings = {
     selectedEsters: [ESTRADIOL_ESTERS[0]],
@@ -32,7 +33,10 @@ describe('ConcentrationGraph', () => {
     optimizerSettings: defaultOptimizerSettings,
     onOptimizerSettingsChange: mockOnOptimizerSettingsChange,
     onOpenOptimizerSettings: mockOnOpenOptimizerSettings,
-    isOptimizing: false
+    isOptimizing: false,
+    isFindingBestFit: false,
+    bestFitProgress: { current: 0, total: 0 },
+    onBestFit: mockOnBestFit
   };
 
   beforeEach(() => {

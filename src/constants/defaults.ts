@@ -7,10 +7,10 @@
 export const DEFAULT_ESTER_CONCENTRATIONS: Record<string, number> = {
   'Estradiol benzoate': 40,
   'Estradiol valerate': 40,
-  'Estradiol cypionate': 5,
+  'Estradiol cypionate': 40,
   'Estradiol cypionate suspension': 5,
-  'Estradiol enanthate': 10,
-  'Estradiol undecylate': 100,
+  'Estradiol enanthate': 40,
+  'Estradiol undecylate': 80,
   'Polyestradiol phosphate': 40,
 } as const;
 
@@ -25,7 +25,7 @@ export const OPTIMIZER_DEFAULTS = {
   MIN_DOSE_PER_INJECTION: 0.1,
 
   /** Default volume granularity in mL (minimum increment for dose adjustments) */
-  DEFAULT_GRANULARITY_ML: 0.05,
+  DEFAULT_GRANULARITY_ML: 0.01,
 
   /** Default maximum number of injections per cycle */
   DEFAULT_MAX_INJECTIONS: 7,
