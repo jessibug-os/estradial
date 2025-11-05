@@ -155,8 +155,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: SPACING['3xl'] }}>
-      <div>
+    <div>
+      <div style={{ position: 'relative' }}>
         <div style={{
           marginBottom: SPACING.xl,
           display: 'flex',
@@ -322,19 +322,22 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
           onDoseClick={handleDoseClick}
           onPillClick={handlePillClick}
           onDoseAdd={addOrUpdateDose}
+          onAddAnotherDose={addAnotherDoseToDay}
         />
-      </div>
 
-      <DoseEditor
-        selectedDoseData={selectedDoseData}
-        selectedDoseIndex={selectedDoseIndex}
-        dosesOnSameDay={selectedDoseData ? doses.filter(d => d.day === selectedDoseData.day).length : 0}
-        onUpdateDoseMedication={updateDoseMedication}
-        onUpdateDoseAmount={updateDoseAmount}
-        onRemoveDose={removeDose}
-        onAddAnotherDose={addAnotherDoseToDay}
-        onClose={() => setSelectedDoseIndex(null)}
-      />
+        {selectedDoseData && selectedDoseIndex !== null && (
+          <DoseEditor
+            selectedDoseData={selectedDoseData}
+            selectedDoseIndex={selectedDoseIndex}
+            dosesOnSameDay={selectedDoseData ? doses.filter(d => d.day === selectedDoseData.day).length : 0}
+            onUpdateDoseMedication={updateDoseMedication}
+            onUpdateDoseAmount={updateDoseAmount}
+            onRemoveDose={removeDose}
+            onClose={() => setSelectedDoseIndex(null)}
+            isPopover={true}
+          />
+        )}
+      </div>
     </div>
   );
 };

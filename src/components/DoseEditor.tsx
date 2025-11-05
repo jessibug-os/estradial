@@ -10,8 +10,8 @@ interface DoseEditorProps {
   onUpdateDoseMedication: (index: number, medicationName: string) => void;
   onUpdateDoseAmount: (index: number, newDose: number) => void;
   onRemoveDose: (index: number) => void;
-  onAddAnotherDose: (day: number) => void;
   onClose: () => void;
+  isPopover?: boolean;
 }
 
 const DoseEditor: React.FC<DoseEditorProps> = ({
@@ -21,22 +21,47 @@ const DoseEditor: React.FC<DoseEditorProps> = ({
   onUpdateDoseMedication,
   onUpdateDoseAmount,
   onRemoveDose,
-  onAddAnotherDose,
-  onClose
+  onClose,
+  isPopover = false
 }) => {
+  const popoverStyle = isPopover ? {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 1000,
+    width: '400px',
+    maxWidth: '90vw'
+  } : {};
+
   return (
-    <div style={{
-      padding: SPACING['3xl'],
-      backgroundColor: selectedDoseData ? COLORS.selectedHighlight : COLORS.white,
-      border: `1px solid ${selectedDoseData ? COLORS.selectedBorder : COLORS.gray300}`,
-      borderRadius: BORDER_RADIUS.lg,
-      boxShadow: SHADOWS.md,
-      height: '454px',
-      overflowY: 'auto' as const,
-      display: 'flex',
-      flexDirection: 'column' as const
-    }}>
-      {selectedDoseData && selectedDoseIndex !== null ? (
+    <>
+      {isPopover && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed' as const,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            zIndex: 999
+          }}
+        />
+      )}
+      <div style={{
+        padding: SPACING.xl,
+        backgroundColor: COLORS.white,
+        border: `1px solid ${COLORS.gray400}`,
+        borderRadius: BORDER_RADIUS.lg,
+        boxShadow: SHADOWS.lg,
+        overflowY: 'auto' as const,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        ...popoverStyle
+      }}>
+        {selectedDoseData && selectedDoseIndex !== null ? (
         <>
           <h4 style={{ margin: `0 0 ${SPACING['2xl']} 0`, fontSize: TYPOGRAPHY.fontSize.lg, fontWeight: TYPOGRAPHY.fontWeight.semibold }}>
             Edit Injection - Day {selectedDoseData.day}
@@ -90,82 +115,30 @@ const DoseEditor: React.FC<DoseEditorProps> = ({
             </div>
           </div>
 
-          <div style={{ marginBottom: SPACING['3xl'], padding: SPACING.xl, backgroundColor: COLORS.parameterBackground, borderRadius: BORDER_RADIUS.sm }}>
-            <div style={{ fontSize: TYPOGRAPHY.fontSize.sm, fontWeight: TYPOGRAPHY.fontWeight.semibold, marginBottom: SPACING.md, color: COLORS.parameterText }}>Pharmacokinetic Parameters:</div>
-            <div style={{ fontSize: TYPOGRAPHY.fontSize.sm, color: COLORS.gray600 }}>
-              {(() => {
-                const med = selectedDoseData.medication || selectedDoseData.ester;
-                // Check if it's an estradiol medication (has D, k1, k2, k3)
-                if (med && 'D' in med) {
-                  return (
-                    <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>D:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{med.D.toExponential(2)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>k1:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{med.k1.toFixed(4)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>k2:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{med.k2.toFixed(4)}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>k3:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{med.k3.toFixed(4)}</span>
-                      </div>
-                    </>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: SPACING.lg }}>
+          <div style={{ display: 'flex', gap: SPACING.md }}>
             <button
               onClick={onClose}
               style={mergeStyles(BUTTON_STYLES.base, BUTTON_STYLES.primary, {
-                borderRadius: BORDER_RADIUS.md
+                borderRadius: BORDER_RADIUS.md,
+                flex: 1
               })}
             >
               Done
             </button>
             <button
-              onClick={() => onAddAnotherDose(selectedDoseData.day)}
-              style={mergeStyles(BUTTON_STYLES.base, {
-                backgroundColor: COLORS.gray600,
-                color: COLORS.white,
-                borderRadius: BORDER_RADIUS.md
-              })}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.gray700}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.gray600}
-            >
-              Add Another Medication
-            </button>
-            <button
               onClick={() => onRemoveDose(selectedDoseIndex)}
               style={mergeStyles(BUTTON_STYLES.base, BUTTON_STYLES.danger, {
-                borderRadius: BORDER_RADIUS.md
+                borderRadius: BORDER_RADIUS.md,
+                flex: 1
               })}
             >
               Remove
             </button>
           </div>
         </>
-      ) : (
-        <>
-          <h4 style={{ margin: `0 0 ${SPACING['2xl']} 0`, fontSize: TYPOGRAPHY.fontSize.lg, fontWeight: TYPOGRAPHY.fontWeight.semibold }}>Instructions</h4>
-          <p style={{ fontSize: TYPOGRAPHY.fontSize.md, color: COLORS.gray600, lineHeight: TYPOGRAPHY.lineHeight.relaxed }}>
-            Click on any day in the calendar to add an injection. Click on an existing injection to edit its dose and ester type.
-          </p>
-          <p style={{ fontSize: TYPOGRAPHY.fontSize.md, color: COLORS.gray600, lineHeight: TYPOGRAPHY.lineHeight.relaxed, marginTop: SPACING.xl }}>
-            Each injection can use a different estradiol ester with unique pharmacokinetic properties.
-          </p>
-        </>
-      )}
-    </div>
+      ) : null}
+      </div>
+    </>
   );
 };
 

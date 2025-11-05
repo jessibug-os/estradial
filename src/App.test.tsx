@@ -7,8 +7,8 @@ test('renders app title', () => {
   expect(titleElement).toBeInTheDocument();
 });
 
-test('renders instructions when no dose selected', () => {
+test('renders visual timeline', () => {
   render(<App />);
-  const instructionsElement = screen.getByText(/Click on any day in the calendar/i);
-  expect(instructionsElement).toBeInTheDocument();
+  const scheduleLabel = screen.getByText(/Schedule:/i);
+  expect(scheduleLabel).toBeInTheDocument();
 });

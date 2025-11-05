@@ -197,11 +197,11 @@ describe('VisualTimeline', () => {
   });
 
   describe('DoseEditor integration', () => {
-    it('renders DoseEditor component', () => {
+    it('renders schedule controls', () => {
       render(<VisualTimeline {...defaultProps} />);
-      
-      // DoseEditor shows instructions when no dose is selected
-      expect(screen.getByText(/click on any day/i)).toBeInTheDocument();
+
+      // Should render schedule controls when no dose is selected
+      expect(screen.getByText(/Schedule:/i)).toBeInTheDocument();
     });
   });
 

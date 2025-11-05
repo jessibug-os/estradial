@@ -6,7 +6,6 @@ describe('DoseEditor', () => {
   const mockOnUpdateDoseMedication = jest.fn();
   const mockOnUpdateDoseAmount = jest.fn();
   const mockOnRemoveDose = jest.fn();
-  const mockOnAddAnotherDose = jest.fn();
   const mockOnClose = jest.fn();
 
   const testDose = {
@@ -20,8 +19,8 @@ describe('DoseEditor', () => {
   });
 
   describe('when no dose is selected', () => {
-    it('should render instructions', () => {
-      render(
+    it('should not render anything when no dose is selected', () => {
+      const { container } = render(
         <DoseEditor
           selectedDoseData={null}
           selectedDoseIndex={null}
@@ -29,30 +28,12 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
 
-      expect(screen.getByText('Instructions')).toBeInTheDocument();
-      expect(screen.getByText(/Click on any day in the calendar/)).toBeInTheDocument();
-      expect(screen.getByText(/Each injection can use a different estradiol ester/)).toBeInTheDocument();
-    });
-
-    it('should not render editing UI when no dose is selected', () => {
-      render(
-        <DoseEditor
-          selectedDoseData={null}
-          selectedDoseIndex={null}
-          dosesOnSameDay={0}
-          onUpdateDoseMedication={mockOnUpdateDoseMedication}
-          onUpdateDoseAmount={mockOnUpdateDoseAmount}
-          onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
-          onClose={mockOnClose}
-        />
-      );
-
+      // Should render an empty div when no dose is selected
+      expect(container.querySelector('h4')).not.toBeInTheDocument();
       expect(screen.queryByText(/Edit Injection/)).not.toBeInTheDocument();
       expect(screen.queryByText('Done')).not.toBeInTheDocument();
       expect(screen.queryByText('Remove')).not.toBeInTheDocument();
@@ -69,7 +50,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -86,7 +66,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -109,7 +88,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -130,7 +108,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -149,7 +126,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -170,7 +146,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -181,26 +156,6 @@ describe('DoseEditor', () => {
       expect(mockOnUpdateDoseAmount).toHaveBeenCalledWith(0, 0);
     });
 
-    it('should display pharmacokinetic parameters', () => {
-      render(
-        <DoseEditor
-          selectedDoseData={testDose}
-          selectedDoseIndex={0}
-          dosesOnSameDay={1}
-          onUpdateDoseMedication={mockOnUpdateDoseMedication}
-          onUpdateDoseAmount={mockOnUpdateDoseAmount}
-          onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
-          onClose={mockOnClose}
-        />
-      );
-
-      expect(screen.getByText('Pharmacokinetic Parameters:')).toBeInTheDocument();
-      expect(screen.getByText('D:')).toBeInTheDocument();
-      expect(screen.getByText('k1:')).toBeInTheDocument();
-      expect(screen.getByText('k2:')).toBeInTheDocument();
-      expect(screen.getByText('k3:')).toBeInTheDocument();
-    });
 
     it('should call onClose when Done button is clicked', () => {
       render(
@@ -211,7 +166,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -231,7 +185,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );
@@ -258,7 +211,6 @@ describe('DoseEditor', () => {
           onUpdateDoseMedication={mockOnUpdateDoseMedication}
           onUpdateDoseAmount={mockOnUpdateDoseAmount}
           onRemoveDose={mockOnRemoveDose}
-          onAddAnotherDose={mockOnAddAnotherDose}
           onClose={mockOnClose}
         />
       );

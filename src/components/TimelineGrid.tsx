@@ -14,6 +14,7 @@ interface TimelineGridProps {
   onDoseClick: (day: number) => void;
   onPillClick: (index: number) => void;
   onDoseAdd: (day: number, dose: number, ester: EstradiolMedication) => void;
+  onAddAnotherDose: (day: number) => void;
 }
 
 const TimelineGrid: React.FC<TimelineGridProps> = ({
@@ -25,7 +26,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
   defaultEster,
   onDoseClick,
   onPillClick,
-  onDoseAdd
+  onDoseAdd,
+  onAddAnotherDose
 }) => {
 
   const renderTimelineDay = (day: number) => {
@@ -52,8 +54,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             flexDirection: 'column' as const,
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '1px',
-            padding: '2px',
+            gap: '3px',
+            padding: '4px',
             position: 'relative' as const,
             transition: 'all 0.15s ease',
             overflow: 'hidden',
@@ -77,6 +79,44 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
               {day}
             </div>
           )}
+
+          {/* Plus button in top-right corner */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddAnotherDose(day);
+            }}
+            style={{
+              position: 'absolute' as const,
+              top: '2px',
+              right: '2px',
+              width: '16px',
+              height: '16px',
+              borderRadius: '3px',
+              border: `1px solid ${COLORS.primary}`,
+              backgroundColor: COLORS.white,
+              color: COLORS.primary,
+              fontSize: '12px',
+              lineHeight: '1',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              transition: 'all 0.15s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.primary;
+              e.currentTarget.style.color = COLORS.white;
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = COLORS.white;
+              e.currentTarget.style.color = COLORS.primary;
+            }}
+            title="Add another medication to this day"
+          >
+            +
+          </button>
 
           {/* Render each medication as a pill */}
           {dosesOnDay.map((doseData) => {
@@ -106,19 +146,19 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                 }}
                 style={{
                   backgroundColor,
-                  borderRadius: '6px',
-                  padding: '2px 4px',
+                  borderRadius: '8px',
+                  padding: '4px 6px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '2px',
-                  fontSize: '9px',
+                  gap: '4px',
+                  fontSize: '11px',
                   fontWeight: TYPOGRAPHY.fontWeight.semibold,
                   color: COLORS.white,
                   boxShadow: isSelected ? `0 0 0 2px ${COLORS.primaryHover}` : `0 1px 2px ${backgroundColor}66`,
-                  minHeight: '16px',
-                  maxHeight: '16px',
-                  width: 'calc(100% - 2px)',
+                  minHeight: '22px',
+                  maxHeight: '22px',
+                  width: 'calc(100% - 4px)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap' as const,
@@ -135,9 +175,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                   if (!isSelected) e.currentTarget.style.opacity = '0.95';
                 }}
               >
-                <span style={{ fontSize: '8px', opacity: 0.9 }}>{abbreviatedName}</span>
-                <span style={{ fontSize: '9px' }}>{formatNumber(doseData.dose)}mg</span>
-                <span style={{ fontSize: '7px', opacity: 0.8 }}>({formatNumber(volumeMl, 2)}mL)</span>
+                <span style={{ fontSize: '10px', opacity: 0.9 }}>{abbreviatedName}</span>
+                <span style={{ fontSize: '11px' }}>{formatNumber(doseData.dose)}mg</span>
+                <span style={{ fontSize: '9px', opacity: 0.85 }}>({formatNumber(volumeMl, 2)}mL)</span>
               </div>
             );
           })}
