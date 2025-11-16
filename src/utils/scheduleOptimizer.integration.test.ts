@@ -275,4 +275,57 @@ describe('scheduleOptimizer integration tests', () => {
       expect(duration).toBeLessThan(20000);
     });
   });
+
+  describe('Medication consolidation', () => {
+    it('never produces duplicate medications on the same day', async () => {
+      const result = await optimizeSchedule({
+        availableEsters: ESTRADIOL_ESTERS,
+        scheduleLength: 28,
+        referenceCycleType: 'typical' as ReferenceCycleType,
+        steadyState: true,
+        granularity: 0.05,
+        maxDosePerInjection: 10,
+        minDosePerInjection: 1,
+        maxInjectionsPerCycle: 10,
+        esterConcentrations
+      });
+
+      // Check that no day has duplicate medications
+      const dayMedicationMap = new Map<number, Set<string>>();
+
+      for (const dose of result.doses) {
+        if (!dayMedicationMap.has(dose.day)) {
+          dayMedicationMap.set(dose.day, new Set());
+        }
+
+        const medicationsOnDay = dayMedicationMap.get(dose.day)!;
+        const medName = dose.medication.name;
+
+        // Should not already have this medication on this day
+        expect(medicationsOnDay.has(medName)).toBe(false);
+
+        medicationsOnDay.add(medName);
+      }
+    });
+
+    it('prefers single medication when available', async () => {
+      // Test with only EV available
+      const evOnly = await optimizeSchedule({
+        availableEsters: [ESTRADIOL_ESTERS[1]!], // Just EV
+        scheduleLength: 28,
+        referenceCycleType: 'typical' as ReferenceCycleType,
+        steadyState: true,
+        granularity: 0.05,
+        maxDosePerInjection: 10,
+        minDosePerInjection: 1,
+        maxInjectionsPerCycle: 4,
+        esterConcentrations
+      });
+
+      // All doses should be EV
+      const uniqueMedications = new Set(evOnly.doses.map(d => d.medication.name));
+      expect(uniqueMedications.size).toBe(1);
+      expect(uniqueMedications.has('Estradiol valerate')).toBe(true);
+    });
+  });
 });

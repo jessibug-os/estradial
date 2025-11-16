@@ -15,10 +15,79 @@ import VisualTimeline from './components/VisualTimeline';
 import ConcentrationGraph from './components/ConcentrationGraph';
 import OptimizerModal from './components/OptimizerModal';
 import { optimizeSchedule } from './utils/scheduleOptimizer';
-import { AnyMedication } from './types/medication';
+import { AnyMedication, isProgesteroneMedication } from './types/medication';
+import { PROGESTERONE_ROUTES } from './data/progesteroneRoutes';
+
+const STORAGE_KEYS = {
+  OPTIMIZER_SETTINGS: 'optimizerSettings',
+  ESTER_CONCENTRATIONS: 'esterConcentrations'
+};
+
+function loadOptimizerSettings() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.OPTIMIZER_SETTINGS);
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+
+    const allMedications = [...ESTRADIOL_ESTERS, ...PROGESTERONE_ROUTES];
+    const selectedEsters = (parsed.selectedMedicationNames || [])
+      .map((name: string) => allMedications.find(m => m.name === name))
+      .filter(Boolean) as AnyMedication[];
+
+    return {
+      selectedEsters: selectedEsters.length > 0 ? selectedEsters : [ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!],
+      maxInjections: parsed.maxInjections || 4,
+      granularity: parsed.granularity || 0.05,
+      progesteroneDoses: parsed.progesteroneDoses || [100, 200]
+    };
+  } catch (e) {
+    console.error('Failed to load optimizer settings from localStorage:', e);
+    return null;
+  }
+}
+
+function saveOptimizerSettings(settings: {
+  selectedEsters: AnyMedication[];
+  maxInjections: number;
+  granularity: number;
+  progesteroneDoses: number[];
+}) {
+  try {
+    const toStore = {
+      selectedMedicationNames: settings.selectedEsters.map(m => m.name),
+      maxInjections: settings.maxInjections,
+      granularity: settings.granularity,
+      progesteroneDoses: settings.progesteroneDoses
+    };
+    localStorage.setItem(STORAGE_KEYS.OPTIMIZER_SETTINGS, JSON.stringify(toStore));
+  } catch (e) {
+    console.error('Failed to save optimizer settings to localStorage:', e);
+  }
+}
+
+function loadEsterConcentrations(): Record<string, number> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.ESTER_CONCENTRATIONS);
+    if (!stored) return DEFAULT_ESTER_CONCENTRATIONS;
+
+    const parsed = JSON.parse(stored);
+    return { ...DEFAULT_ESTER_CONCENTRATIONS, ...parsed };
+  } catch (e) {
+    console.error('Failed to load ester concentrations from localStorage:', e);
+    return DEFAULT_ESTER_CONCENTRATIONS;
+  }
+}
+
+function saveEsterConcentrations(concentrations: Record<string, number>) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ESTER_CONCENTRATIONS, JSON.stringify(concentrations));
+  } catch (e) {
+    console.error('Failed to save ester concentrations to localStorage:', e);
+  }
+}
 
 function App() {
-  // Load from URL or use defaults
   const loadFromURL = (): {
     doses: Dose[],
     scheduleLength: number,
@@ -30,10 +99,8 @@ function App() {
     const scheduleData = params.get('s');
 
     if (scheduleData) {
-      // Try new compact format first
       let decoded = decodeSchedule(scheduleData);
 
-      // Fall back to legacy format for backwards compatibility
       if (!decoded) {
         decoded = decodeLegacySchedule(scheduleData);
       }
@@ -60,32 +127,31 @@ function App() {
   const [repeatSchedule, setRepeatSchedule] = useState(initial.repeat);
   const [steadyState, setSteadyState] = useState(false);
   const [referenceCycleType, setReferenceCycleType] = useState<ReferenceCycleType>(initial.cycleType);
-  // Map of ester name to concentration in mg/mL
-  const [esterConcentrations, setEsterConcentrations] = useState<Record<string, number>>(DEFAULT_ESTER_CONCENTRATIONS);
+  const [esterConcentrations, setEsterConcentrations] = useState<Record<string, number>>(() => loadEsterConcentrations());
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [tempEsterConcentrations, setTempEsterConcentrations] = useState(esterConcentrations);
   const [concentrationInputs, setConcentrationInputs] = useState<Record<string, string>>({});
-
-  // Optimize mode state
   const [optimizeMode, setOptimizeMode] = useState(false);
   const [showOptimizerSettingsModal, setShowOptimizerSettingsModal] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizeProgress, setOptimizeProgress] = useState(0); // 0-100 percentage
+  const [optimizeProgress, setOptimizeProgress] = useState(0);
   const [isFindingBestFit, setIsFindingBestFit] = useState(false);
   const [bestFitProgress, setBestFitProgress] = useState({ current: 0, total: 0, injectionCount: 0 });
   const [optimizerSettings, setOptimizerSettings] = useState<{
     selectedEsters: AnyMedication[];
     maxInjections: number;
     granularity: number;
-    progesteroneDoses: number[]; // Available progesterone doses (100mg and/or 200mg)
-  }>({
-    selectedEsters: [ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!],
-    maxInjections: 4,
-    granularity: 0.05,
-    progesteroneDoses: [100, 200] // Default: both doses available
+    progesteroneDoses: number[];
+  }>(() => {
+    const loaded = loadOptimizerSettings();
+    return loaded || {
+      selectedEsters: [ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!],
+      maxInjections: 4,
+      granularity: 0.05,
+      progesteroneDoses: [100, 200]
+    };
   });
 
-  // Update URL when schedule changes
   useEffect(() => {
     const encoded = encodeSchedule({
       doses,
@@ -100,14 +166,20 @@ function App() {
   }, [doses, scheduleLength, graphDisplayDays, repeatSchedule, referenceCycleType]);
 
   useEffect(() => {
-    // Create the dose array for calculation, repeating if needed
+    saveOptimizerSettings(optimizerSettings);
+  }, [optimizerSettings]);
+
+  useEffect(() => {
+    saveEsterConcentrations(esterConcentrations);
+  }, [esterConcentrations]);
+
+  useEffect(() => {
     let dosesForCalculation = doses;
 
     if (repeatSchedule && doses.length > 0) {
       const repeatedDoses: Dose[] = [];
       const cycleLength = scheduleLength;
 
-      // If steady state, add cycles BEFORE day 0 to build up residual levels
       const startCycle = steadyState ? PHARMACOKINETICS.STEADY_STATE_START_CYCLE : 0;
       const numCycles = Math.ceil(graphDisplayDays / cycleLength) + (steadyState ? PHARMACOKINETICS.STEADY_STATE_CYCLES : 0);
 
@@ -129,12 +201,10 @@ function App() {
     );
     const data = calculateTotalConcentration(dosesForCalculation, timePoints);
 
-    // Filter to only show data from day 0 onwards
     const filteredData = data.filter(point => point.time >= 0);
     setConcentrationData(filteredData);
   }, [doses, scheduleLength, graphDisplayDays, repeatSchedule, steadyState]);
 
-  // Handle optimization
   const handleRunOptimization = async () => {
     setIsOptimizing(true);
     setOptimizeProgress(0);
@@ -152,7 +222,6 @@ function App() {
           esterConcentrations,
           progesteroneDoses: optimizerSettings.progesteroneDoses
         },
-        // Progress callback
         (progress) => {
           setOptimizeProgress(progress);
         }
@@ -170,17 +239,14 @@ function App() {
     }
   };
 
-  // Cancellation ref for best fit
   const bestFitCancelRef = useRef(false);
 
-  // Stop best fit operation
   const handleStopBestFit = () => {
     bestFitCancelRef.current = true;
   };
 
-  // Find best fit by testing all injection counts
   const handleBestFit = async () => {
-    bestFitCancelRef.current = false; // Reset cancellation flag
+    bestFitCancelRef.current = false;
     setIsFindingBestFit(true);
     setIsOptimizing(true);
 
@@ -188,24 +254,33 @@ function App() {
       let bestScore = Infinity;
       let bestInjectionCount = optimizerSettings.maxInjections;
       let bestDoses: Dose[] = [];
+      let noImprovementCount = 0;
+      const EARLY_STOP_THRESHOLD = 3;
 
-      // Calculate total work units: sum from 1 to scheduleLength
-      // Work is roughly proportional to number of injections being tested
-      // Total work = 1 + 2 + 3 + ... + n = n(n+1)/2
-      const totalWorkUnits = (scheduleLength * (scheduleLength + 1)) / 2;
-      let completedWorkUnits = 0;
+      let completedInjectionCounts = 0;
+      let maxEstimatedTotal = EARLY_STOP_THRESHOLD;
 
-      setBestFitProgress({ current: 0, total: totalWorkUnits, injectionCount: 0 });
+      setBestFitProgress({ current: 0, total: 100, injectionCount: 0 });
 
       for (let injections = 1; injections <= scheduleLength; injections++) {
-        // Check for cancellation
         if (bestFitCancelRef.current) {
-          console.log('Best fit cancelled by user');
           break;
         }
-        // Work units for this injection count (previous + current)
-        const workUnitsBeforeThis = completedWorkUnits;
-        const workUnitsForThis = injections;
+
+        if (noImprovementCount >= EARLY_STOP_THRESHOLD) {
+          setBestFitProgress({ current: 100, total: 100, injectionCount: injections });
+          break;
+        }
+
+        const maxRemainingCounts = EARLY_STOP_THRESHOLD - noImprovementCount;
+        const estimatedTotalCounts = Math.max(
+          maxEstimatedTotal,
+          completedInjectionCounts + maxRemainingCounts + 1
+        );
+        maxEstimatedTotal = estimatedTotalCounts;
+
+        const currentCompleted = completedInjectionCounts;
+        const lockedEstimate = maxEstimatedTotal;
 
         const result = await optimizeSchedule(
           {
@@ -218,28 +293,39 @@ function App() {
             minDosePerInjection: 0.1,
             maxInjectionsPerCycle: injections,
             esterConcentrations,
-            progesteroneDoses: optimizerSettings.progesteroneDoses
+            progesteroneDoses: optimizerSettings.progesteroneDoses,
+            optimizeForAccuracyOnly: true
           },
-          // Progress callback: interpolate between work units for this injection count
           (progress) => {
-            // progress is 0-100 for this individual optimization
-            const currentWorkInProgress = workUnitsBeforeThis + (workUnitsForThis * progress / 100);
-            setBestFitProgress({ current: currentWorkInProgress, total: totalWorkUnits, injectionCount: injections });
+            const currentProgress = currentCompleted + (progress / 100);
+            const percentComplete = Math.min(95, (currentProgress / lockedEstimate) * 100);
+            setBestFitProgress({
+              current: Math.round(percentComplete),
+              total: 100,
+              injectionCount: injections
+            });
           }
         );
 
-        // Update progress based on completed work units
-        completedWorkUnits += injections;
-        setBestFitProgress({ current: completedWorkUnits, total: totalWorkUnits, injectionCount: injections });
+        completedInjectionCounts++;
+
+        const percentComplete = Math.min(95, (completedInjectionCounts / lockedEstimate) * 100);
+        setBestFitProgress({
+          current: Math.round(percentComplete),
+          total: 100,
+          injectionCount: injections
+        });
 
         if (result.score < bestScore) {
           bestScore = result.score;
           bestInjectionCount = injections;
           bestDoses = result.doses;
+          noImprovementCount = 0;
+        } else {
+          noImprovementCount++;
         }
       }
 
-      // Apply the best result
       setOptimizerSettings({
         ...optimizerSettings,
         maxInjections: bestInjectionCount
@@ -247,24 +333,25 @@ function App() {
       setDoses(bestDoses);
       setRepeatSchedule(true);
       setSteadyState(true);
+
+      setBestFitProgress({ current: 100, total: 100, injectionCount: bestInjectionCount });
     } catch (error) {
       console.error('Best fit failed:', error);
       alert('Best fit failed. Please try again.');
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 500));
       setIsFindingBestFit(false);
       setIsOptimizing(false);
       setBestFitProgress({ current: 0, total: 0, injectionCount: 0 });
     }
   };
 
-  // Auto-run optimization when settings change (with debounce)
   const optimizationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const previousMaxInjectionsRef = useRef<number>(optimizerSettings.maxInjections);
 
   useEffect(() => {
     if (!optimizeMode) return;
 
-    // Don't run on initial mount, only when maxInjections actually changes
     if (previousMaxInjectionsRef.current === optimizerSettings.maxInjections) {
       previousMaxInjectionsRef.current = optimizerSettings.maxInjections;
       return;
@@ -272,12 +359,10 @@ function App() {
 
     previousMaxInjectionsRef.current = optimizerSettings.maxInjections;
 
-    // Clear any pending optimization
     if (optimizationTimeoutRef.current) {
       clearTimeout(optimizationTimeoutRef.current);
     }
 
-    // Debounce optimization by 500ms
     optimizationTimeoutRef.current = setTimeout(() => {
       handleRunOptimization();
     }, 500);
@@ -372,6 +457,7 @@ function App() {
         bestFitProgress={bestFitProgress}
         onBestFit={handleBestFit}
         onStopBestFit={handleStopBestFit}
+        actualInjectionCount={doses.filter(d => !isProgesteroneMedication(d.medication)).length}
       />
 
       <OptimizerModal

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dose } from '../data/estradiolEsters';
-import { EstradiolMedication } from '../types/medication';
+import { EstradiolMedication, isProgesteroneMedication } from '../types/medication';
 import { formatNumber } from '../utils/formatters';
 import { getEsterColor } from '../constants/colors';
 import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../constants/styles';
@@ -136,14 +136,23 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             const concentration = esterConcentrations[medicationName] || 40;
             const volumeMl = doseData.dose / concentration;
             const isSelected = selectedDoseIndex === globalIndex;
+            const isProgesterone = medication && isProgesteroneMedication(medication);
 
-            // Get abbreviated name (first letter of each word, max 3 chars)
-            const abbreviatedName = medicationName
-              .split(' ')
-              .map(word => word[0])
-              .join('')
-              .toUpperCase()
-              .slice(0, 3);
+            // Get abbreviated name with route subscript for progesterone
+            let abbreviatedName: string;
+            if (isProgesterone && 'route' in medication) {
+              // P with subscript: O (oral), R (rectal), V (vaginal)
+              const routeChar = medication.route[0]!.toUpperCase();
+              abbreviatedName = `P${routeChar}`;
+            } else {
+              // Estradiol: first letter of each word, max 3 chars
+              abbreviatedName = medicationName
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 3);
+            }
 
             return (
               <div
@@ -175,7 +184,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                   transition: 'all 0.15s ease',
                   opacity: isSelected ? 1 : 0.95
                 }}
-                title={`${medicationName}: ${formatNumber(doseData.dose)}mg = ${formatNumber(volumeMl, 3)}mL @ ${concentration}mg/mL`}
+                title={isProgesterone
+                  ? `${medicationName}: ${formatNumber(doseData.dose)}mg`
+                  : `${medicationName}: ${formatNumber(doseData.dose)}mg = ${formatNumber(volumeMl, 3)}mL @ ${concentration}mg/mL`}
                 onMouseOver={(e) => {
                   if (!isSelected) e.currentTarget.style.opacity = '1';
                 }}
@@ -185,7 +196,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
               >
                 <span style={{ fontSize: '10px', opacity: 0.9 }}>{abbreviatedName}</span>
                 <span style={{ fontSize: '11px' }}>{formatNumber(doseData.dose)}mg</span>
-                <span style={{ fontSize: '9px', opacity: 0.85 }}>({formatNumber(volumeMl, 2)}mL)</span>
+                {!isProgesterone && (
+                  <span style={{ fontSize: '9px', opacity: 0.85 }}>({formatNumber(volumeMl, 2)}mL)</span>
+                )}
               </div>
             );
           })}

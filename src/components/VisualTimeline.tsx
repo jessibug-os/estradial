@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dose, ESTRADIOL_ESTERS } from '../data/estradiolEsters';
 import { PROGESTERONE_ROUTES } from '../data/progesteroneRoutes';
-import { EstradiolMedication } from '../types/medication';
+import { EstradiolMedication, isProgesteroneMedication } from '../types/medication';
 import { formatNumber } from '../utils/formatters';
 import { useDebouncedInput } from '../hooks/useDebounce';
 import { parsePositiveInteger } from '../utils/validation';
@@ -58,7 +58,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
       if (dosesOutOfRange.length > 0) {
         const newDoses = doses.filter(d => d.day < viewDays);
         onDosesChange(newDoses);
-        // Clear selection if the selected dose was removed
         if (selectedDoseIndex !== null && selectedDoseIndex >= newDoses.length) {
           setSelectedDoseIndex(null);
         }
@@ -67,7 +66,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     setPreviousViewDays(viewDays);
   }, [viewDays, doses, previousViewDays, selectedDoseIndex, onDosesChange]);
 
-  // Default to Estradiol valerate for new injections
   const DEFAULT_ESTER = ESTRADIOL_ESTERS[1] || ESTRADIOL_ESTERS[0]!;
 
   const addOrUpdateDose = (day: number, dose: number = 6, ester: EstradiolMedication = DEFAULT_ESTER) => {
@@ -75,10 +73,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
     let newDoses = [...doses];
 
     if (existingIndex >= 0) {
-      // Update existing dose
       newDoses[existingIndex] = { day, dose, medication: ester };
     } else {
-      // Add new dose
       newDoses.push({ day, dose, medication: ester });
       newDoses.sort((a, b) => a.day - b.day);
     }
@@ -87,8 +83,7 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   };
 
   const addAnotherDoseToDay = (day: number) => {
-    // Add a new progesterone dose to the same day
-    const defaultProgesterone = PROGESTERONE_ROUTES[0]!; // Default to oral progesterone
+    const defaultProgesterone = PROGESTERONE_ROUTES[0]!;
     const newDoses = [...doses, { day, dose: 100, medication: defaultProgesterone }];
     newDoses.sort((a, b) => a.day - b.day);
     onDosesChange(newDoses);
@@ -111,7 +106,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   const updateDoseMedication = (index: number, medicationName: string) => {
     if (index < 0 || index >= doses.length) return;
 
-    // Find medication in either estradiol esters or progesterone routes
     const allMedications = [...ESTRADIOL_ESTERS, ...PROGESTERONE_ROUTES];
     const medication = allMedications.find(m => m.name === medicationName);
     if (!medication) return;
@@ -122,7 +116,6 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   };
 
   const handleDoseClick = (day: number) => {
-    // When clicking on empty space in a day cell, select first dose on that day
     const dosesOnDay = doses.map((d, idx) => ({ dose: d, index: idx })).filter(({ dose }) => dose.day === day);
     if (dosesOnDay.length > 0) {
       setSelectedDoseIndex(dosesOnDay[0]!.index);
@@ -130,28 +123,40 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
   };
 
   const handlePillClick = (index: number) => {
-    // Directly select the clicked pill
     setSelectedDoseIndex(index);
   };
 
-  // Get the selected dose by index
   const selectedDoseData = selectedDoseIndex !== null && selectedDoseIndex < doses.length ? doses[selectedDoseIndex]! : null;
 
-  // Calculate dosage display text
-  const getDosageDisplayText = (): string => {
-    if (doses.length === 0) return '';
+  const estradiolDoses = doses.filter(d => !isProgesteroneMedication(d.medication));
+  const progesteroneDoses = doses.filter(d => isProgesteroneMedication(d.medication));
+
+  const getEstradiolDosageText = (): string => {
+    if (estradiolDoses.length === 0) return '';
 
     if (repeatSchedule) {
-      // Calculate average weekly dose for repeated schedules
-      const totalMg = doses.reduce((sum, dose) => sum + dose.dose, 0);
+      const totalMg = estradiolDoses.reduce((sum, dose) => sum + dose.dose, 0);
       const scheduleDays = viewDays;
       const avgWeeklyDose = (totalMg / scheduleDays) * 7;
-      return ` (${formatNumber(avgWeeklyDose)}mg avg/week)`;
+      return ` (${formatNumber(avgWeeklyDose)}mg E2 avg/week)`;
     } else {
-      // Calculate total mg for non-repeated schedules
-      const totalMg = doses.reduce((sum, dose) => sum + dose.dose, 0);
-      return ` (${formatNumber(totalMg)}mg total)`;
+      const totalMg = estradiolDoses.reduce((sum, dose) => sum + dose.dose, 0);
+      return ` (${formatNumber(totalMg)}mg E2 total)`;
     }
+  };
+
+  const getCountsText = (): string => {
+    const parts: string[] = [];
+
+    if (estradiolDoses.length > 0) {
+      parts.push(`${estradiolDoses.length} injection${estradiolDoses.length !== 1 ? 's' : ''}`);
+    }
+
+    if (progesteroneDoses.length > 0) {
+      parts.push(`${progesteroneDoses.length} P4 dose${progesteroneDoses.length !== 1 ? 's' : ''}`);
+    }
+
+    return parts.join(', ') || '0 injections';
   };
 
   return (
@@ -165,8 +170,8 @@ const VisualTimeline: React.FC<VisualTimelineProps> = ({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACING.lg }}>
             <div style={{ fontSize: TYPOGRAPHY.fontSize.md, color: COLORS.gray600 }}>
-              <strong style={{ color: COLORS.gray700 }}>{doses.length} injection{doses.length !== 1 ? 's' : ''}</strong>
-              {getDosageDisplayText()}
+              <strong style={{ color: COLORS.gray700 }}>{getCountsText()}</strong>
+              {getEstradiolDosageText()}
             </div>
             <div style={{ display: 'flex', gap: SPACING.md }}>
               <div style={{ position: 'relative' }}>

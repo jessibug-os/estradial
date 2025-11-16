@@ -17,17 +17,14 @@ export const useDebouncedInput = <T,>(
   const [inputValue, setInputValue] = useState<T>(initialValue);
   const onChangeRef = useRef(onChange);
 
-  // Keep ref up to date
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  // Sync local input state with prop changes
   useEffect(() => {
     setInputValue(initialValue);
   }, [initialValue]);
 
-  // Debounce onChange callback
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (inputValue !== initialValue) {

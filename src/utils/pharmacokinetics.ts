@@ -4,11 +4,9 @@ import { PHARMACOKINETICS } from '../constants/pharmacokinetics';
 
 export interface ConcentrationPoint {
   time: number;
-  estradiolConcentration: number; // pg/mL
-  progesteroneConcentration: number; // ng/mL
-
-  // Legacy field for backward compatibility
-  concentration?: number; // Deprecated, use estradiolConcentration
+  estradiolConcentration: number;
+  progesteroneConcentration: number;
+  concentration?: number;
 }
 
 export function calculateConcentration(
@@ -58,16 +56,13 @@ export function calculateProgesteroneConcentration(
   const F = bioavailability;
   const ka = absorptionRate; // 1/hour
   const ke = eliminationRate; // 1/hour
-  const Vd = volumeOfDistribution; // liters
+  const Vd = volumeOfDistribution;
 
-  // Prevent division by zero
   if (Math.abs(ka - ke) < 1e-10) {
-    // Special case when ka ≈ ke (rare)
     const concentration = (F * dose * ka * deltaT / Vd) * Math.exp(-ke * deltaT);
     return Math.max(0, concentration);
   }
 
-  // One-compartment model with first-order absorption
   const concentration = (F * dose * ka) / (Vd * (ka - ke)) *
     (Math.exp(-ke * deltaT) - Math.exp(-ka * deltaT));
 
@@ -96,24 +91,19 @@ export function calculateTotalConcentration(
   timePoints: number[]
 ): ConcentrationPoint[] {
   return timePoints.map(t => {
-    // Calculate estradiol concentrations
     const estradiolTotal = doses.reduce((sum, { day, dose, medication, ester }) => {
-      // Use medication if available, fall back to legacy ester for backward compatibility
       const med = medication || (ester ? { ...ester, type: MedicationType.ESTRADIOL } : null);
       if (!med) return sum;
 
-      // Only sum estradiol medications
       if (med.type === MedicationType.ESTRADIOL) {
         return sum + calculateConcentration(t, day, dose, med as EstradiolMedication);
       }
       return sum;
     }, 0);
 
-    // Calculate progesterone concentrations
     const progesteroneTotal = doses.reduce((sum, { day, dose, medication }) => {
       if (!medication) return sum;
 
-      // Only sum progesterone medications
       if (medication.type === MedicationType.PROGESTERONE) {
         return sum + calculateProgesteroneConcentration(t, day, dose, medication as ProgesteroneMedication);
       }
@@ -124,7 +114,6 @@ export function calculateTotalConcentration(
       time: t,
       estradiolConcentration: Math.max(0, estradiolTotal),
       progesteroneConcentration: Math.max(0, progesteroneTotal),
-      // Legacy field for backward compatibility
       concentration: Math.max(0, estradiolTotal)
     };
   });

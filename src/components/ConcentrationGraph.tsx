@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -35,6 +36,7 @@ interface ConcentrationGraphProps {
   bestFitProgress: { current: number; total: number; injectionCount: number };
   onBestFit: () => void;
   onStopBestFit: () => void;
+  actualInjectionCount?: number;
 }
 
 const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
@@ -53,7 +55,8 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
   isFindingBestFit,
   bestFitProgress,
   onBestFit,
-  onStopBestFit
+  onStopBestFit,
+  actualInjectionCount
 }) => {
   const [graphInputValue, setGraphInputValue] = useDebouncedInput(
     viewDays.toString(),
@@ -85,90 +88,82 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
     return formatNumber(value).toString();
   };
 
-  // Generate reference cycle data
-  const referenceData = generateReferenceCycle(viewDays, referenceCycleType);
+  // Memoize reference cycle data generation
+  const referenceData = useMemo(
+    () => generateReferenceCycle(viewDays, referenceCycleType),
+    [viewDays, referenceCycleType]
+  );
 
-  // Filter and combine data for the chart based on viewDays
-  const filteredData = data.filter(point => point.time <= viewDays);
-  const combinedData = filteredData.map((point) => {
-    // Find the reference value for this specific day
-    const referencePoint = referenceData.find(r => r.day === Math.floor(point.time));
+  // Memoize filtered and combined data
+  const combinedData = useMemo(() => {
+    const filteredData = data.filter(point => point.time <= viewDays);
+    return filteredData.map((point) => {
+      const referencePoint = referenceData.find(r => r.day === Math.floor(point.time));
+      return {
+        time: point.time,
+        estradiol: point.estradiolConcentration,
+        progesterone: point.progesteroneConcentration,
+        estradiolReference: referencePoint?.estradiol || null,
+        progesteroneReference: referencePoint?.progesterone || null
+      };
+    });
+  }, [data, viewDays, referenceData]);
 
-    return {
-      time: point.time,
-      estradiol: point.estradiolConcentration,
-      progesterone: point.progesteroneConcentration,
-      estradiolReference: referencePoint?.estradiol || null,
-      progesteroneReference: referencePoint?.progesterone || null
-    };
-  });
-
-  // Generate sensible X-axis tick intervals
-  const generateXTicks = (maxDays: number) => {
+  // Memoize X-axis tick generation
+  const xTicks = useMemo(() => {
     let interval: number;
-    if (maxDays <= 30) interval = 5;
-    else if (maxDays <= 150) interval = 10;
-    else if (maxDays <= 300) interval = 20;
+    if (viewDays <= 30) interval = 5;
+    else if (viewDays <= 150) interval = 10;
+    else if (viewDays <= 300) interval = 20;
     else interval = 30;
 
     const ticks = [];
-    for (let i = 0; i <= maxDays; i += interval) {
+    for (let i = 0; i <= viewDays; i += interval) {
       ticks.push(i);
     }
-    // Always include the last day if it's not already there
-    if (ticks[ticks.length - 1] !== maxDays) {
-      ticks.push(maxDays);
+    if (ticks[ticks.length - 1] !== viewDays) {
+      ticks.push(viewDays);
     }
     return ticks;
-  };
+  }, [viewDays]);
 
-  // Generate Y-axis ticks for estradiol (left axis)
-  const generateEstradiolYTicks = () => {
+  // Memoize Y-axis ticks for estradiol (left axis)
+  const estradiolYTicks = useMemo(() => {
     const maxConcentration = Math.max(
-      ...filteredData.map(d => d.estradiolConcentration),
+      ...combinedData.map(d => d.estradiol),
       ...combinedData.map(d => d.estradiolReference || 0)
     );
 
-    // Round up to nearest 50
     const maxY = Math.ceil(maxConcentration / 50) * 50;
-
-    // Generate ticks every 50 up to maxY
     const ticks = [];
     for (let i = 0; i <= maxY; i += 50) {
       ticks.push(i);
     }
 
-    // Ensure we have at least a few ticks
     if (ticks.length < 3) {
       return [0, 50, 100, 150, 200, 250, 300];
     }
-
     return ticks;
-  };
+  }, [combinedData]);
 
-  // Generate Y-axis ticks for progesterone (right axis)
-  const generateProgesteroneYTicks = () => {
+  // Memoize Y-axis ticks for progesterone (right axis)
+  const progesteroneYTicks = useMemo(() => {
     const maxConcentration = Math.max(
-      ...filteredData.map(d => d.progesteroneConcentration),
+      ...combinedData.map(d => d.progesterone),
       ...combinedData.map(d => d.progesteroneReference || 0)
     );
 
-    // Round up to nearest 5
     const maxY = Math.ceil(maxConcentration / 5) * 5;
-
-    // Generate ticks every 5 up to maxY
     const ticks = [];
     for (let i = 0; i <= maxY; i += 5) {
       ticks.push(i);
     }
 
-    // Ensure we have at least a few ticks
     if (ticks.length < 3) {
       return [0, 5, 10, 15, 20, 25];
     }
-
     return ticks;
-  };
+  }, [combinedData]);
 
   return (
     <div style={{ marginTop: SPACING['3xl'] }}>
@@ -188,7 +183,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
               borderRadius: BORDER_RADIUS.sm,
               fontSize: TYPOGRAPHY.fontSize.sm
             }}>
-              <span>Optimize: {optimizerSettings.maxInjections} injections</span>
+              <span>Optimize: {actualInjectionCount ?? optimizerSettings.maxInjections} injections</span>
               <button
                 onClick={() => onOptimizeModeChange(false)}
                 style={{
@@ -277,7 +272,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             marginBottom: SPACING.md
           }}>
             <label style={{ fontSize: TYPOGRAPHY.fontSize.base, fontWeight: TYPOGRAPHY.fontWeight.semibold, minWidth: '140px' }}>
-              Injection Count:
+              Max Injection Count:
             </label>
             <input
               type="range"
@@ -329,7 +324,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
                   fontSize: TYPOGRAPHY.fontSize.base
                 }}
               >
-                {isFindingBestFit ? 'Stop' : 'Best Fit'}
+                {isFindingBestFit ? 'Stop' : 'Run'}
               </button>
               <button
                 onClick={onOpenOptimizerSettings}
@@ -376,7 +371,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
           <XAxis
             dataKey="time"
             label={{ value: 'Time (days)', position: 'insideBottom' }}
-            ticks={generateXTicks(viewDays)}
+            ticks={xTicks}
             domain={[0, viewDays]}
           />
           {/* Left Y-axis for Estradiol (pg/mL) */}
@@ -385,7 +380,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             tickFormatter={formatYAxisTick}
             label={{ value: 'Estradiol (pg/mL)', angle: -90, position: 'insideLeft' }}
             domain={[0, 'auto']}
-            ticks={generateEstradiolYTicks()}
+            ticks={estradiolYTicks}
           />
           {/* Right Y-axis for Progesterone (ng/mL) */}
           <YAxis
@@ -394,7 +389,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             tickFormatter={formatYAxisTick}
             label={{ value: 'Progesterone (ng/mL)', angle: 90, position: 'insideRight' }}
             domain={[0, 'auto']}
-            ticks={generateProgesteroneYTicks()}
+            ticks={progesteroneYTicks}
           />
           <Tooltip
             formatter={(value, name) => {
@@ -409,7 +404,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
           />
           <Legend />
 
-          {/* Estradiol lines (left axis) */}
+          {/* Estradiol lines (left axis) - disable animations */}
           <Line
             yAxisId="estradiol"
             type="monotone"
@@ -418,6 +413,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             strokeWidth={2}
             dot={false}
             name="Estradiol"
+            isAnimationActive={false}
           />
           <Line
             yAxisId="estradiol"
@@ -428,9 +424,10 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             dot={false}
             strokeDasharray="5 5"
             name="Estradiol Reference"
+            isAnimationActive={false}
           />
 
-          {/* Progesterone lines (right axis) */}
+          {/* Progesterone lines (right axis) - disable animations */}
           <Line
             yAxisId="progesterone"
             type="monotone"
@@ -439,6 +436,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             strokeWidth={2}
             dot={false}
             name="Progesterone"
+            isAnimationActive={false}
           />
           <Line
             yAxisId="progesterone"
@@ -449,6 +447,7 @@ const ConcentrationGraph: React.FC<ConcentrationGraphProps> = ({
             dot={false}
             strokeDasharray="5 5"
             name="Progesterone Reference"
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>

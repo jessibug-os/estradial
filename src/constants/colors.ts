@@ -12,14 +12,28 @@ export const ESTER_COLORS: Record<string, string> = {
 } as const;
 
 /**
+ * Progesterone-specific colors (warm peachy/coral tones to complement lavender)
+ */
+export const PROGESTERONE_COLORS: Record<string, string> = {
+  'Progesterone (oral)': '#f4a261',         // Warm peach/orange
+  'Progesterone (rectal)': '#e76f51',       // Coral/terracotta
+  'Progesterone (vaginal)': '#ee9b6e',      // Soft peachy coral
+} as const;
+
+/**
  * Default ester color (fallback)
  */
 export const DEFAULT_ESTER_COLOR = '#b794f6';
 
 /**
+ * Default progesterone color (fallback)
+ */
+export const DEFAULT_PROGESTERONE_COLOR = '#f4a261';
+
+/**
  * Get color for an ester by name
  */
 export const getEsterColor: (esterName: string) => string = (esterName) => {
-  return ESTER_COLORS[esterName] || DEFAULT_ESTER_COLOR;
+  return ESTER_COLORS[esterName] || PROGESTERONE_COLORS[esterName] || DEFAULT_ESTER_COLOR;
 };
 
